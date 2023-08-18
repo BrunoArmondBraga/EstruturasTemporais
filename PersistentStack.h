@@ -52,7 +52,7 @@ class PersistentStack {
 
         PersistentStack* Pop(){
             if(this->root == nullptr){
-                cout << "Erro, não é possível executar o Pull em pilhas vazias!" << endl;
+                cout << "Erro, não é possível executar o Pop em pilhas vazias!" << endl;
                 PersistentStack *placeHolder = new PersistentStack();
                 return placeHolder;
             }
