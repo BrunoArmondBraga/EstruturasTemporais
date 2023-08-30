@@ -17,20 +17,6 @@ public:
         this->parent = parent;
         this->depth = depth;
     }
-private:
-    void AddLeaf(Node *u){
-        Node* v = u->parent;
-        int jump_jump_depth = 0;
-        if(v->jump->jump != nullptr){
-            jump_jump_depth = v->jump->jump->depth; 
-        }
-        if(v->jump != nullptr && v->depth - v->jump->depth == v->jump->depth - jump_jump_depth){
-            u->jump = v->jump->jump;
-        }
-        else{
-            u->jump = v;
-    }
-}
 };
 
 struct deque{
@@ -42,15 +28,32 @@ deque Deque(){
     return deque{nullptr, nullptr};
 }
 
+void AddLeaf(Node *u){
+    Node* v = u->parent;
+    int jump_jump_depth = 0;
+    if(v->jump == nullptr){
+        u->jump = v;
+        return;
+    }
+    if(v->jump->jump != nullptr){
+        jump_jump_depth = v->jump->jump->depth; 
+    }
+    if(v->jump != nullptr && v->depth - v->jump->depth == v->jump->depth - jump_jump_depth){
+        u->jump = v->jump->jump;
+    }
+    else{
+        u->jump = v;
+    }
+}
+
 Node* LevelAncestor(int k, Node *u){
-    //quebra com k_th corrupto
     int y = u->depth - k;
     while(u->depth != y){
         int jump_depth = 0;
         if(u->jump != nullptr){
             jump_depth = u->jump->depth;
         }
-        else if(jump_depth >= y){
+        if(jump_depth >= y){
             u = u->jump;
         }
         else{
@@ -65,11 +68,9 @@ Node* LowestCommonAncestor(Node *u, Node *v){
         return LowestCommonAncestor(v,u);
     }
     v = LevelAncestor(v->depth - u->depth, v);
-
     if(u == v){
         return u;
     }
-
     while(u->parent != v->parent){
         if(u->jump != v->jump){
             u = u->jump;
@@ -93,12 +94,12 @@ Node* search(deque d, int k){
         return LevelAncestor(k-1, d.first);
     }
     else{
-        return LevelAncestor(l2 - (k-1 - l1), d.last);
+        return LevelAncestor((l2 - (k-1 - l1)), d.last);
     }
-
 }
 
 deque Swap(deque d){
+    //cout << "função Swap!" << endl;
     return deque{d.last, d.first};
 }
 
@@ -109,6 +110,7 @@ deque PushFront(deque d, int x){
         return deque{newNode, newNode};
     }
     Node *newNode = new Node(x, d.first, d.first->depth+1);
+    AddLeaf(newNode);
     return deque{newNode,d.last};
 
 }
@@ -130,6 +132,7 @@ deque PopFront(deque d){
 }
 deque PopBack(deque d){
     //PopBack(d): remove o elemento no extremo back de d
+    deque y = Swap(d);
     return Swap(PopFront(Swap(d)));
 }
 
@@ -154,7 +157,7 @@ int Kth(deque d, int k){
     }
     return search(d,k)->val;
 }
-void Print(deque d){ //ta ruim!
+void Print(deque d){
     //Print(d): imprime todos os elementos da deque d na mesma linha, separados por um branco
     //(não precisa se preocupar com eventual espaço em branco no fim da linha)
     if(d.first == nullptr){
@@ -204,6 +207,28 @@ void Print(deque d){ //ta ruim!
         }
         cout << endl;
     }
+}
+
+void Debuga(Node* ultimo){
+    cout << endl;
+    cout<< "FUNÇÃO DEBUGA!" << endl;
+    if(ultimo == nullptr){
+        return;
+    }
+    cout << "sou o node com valor " << ultimo->val << " , e eu tenho um ponteiro para o Node ";
+    if(ultimo->parent == nullptr){
+        cout << "nullptr" << endl;
+    }
+    else{
+        cout << ultimo->parent->val << endl;
+    }
+    if(ultimo->jump == nullptr){
+        cout << "jump = nullptr!" << endl;
+    }
+    else{
+        cout << "jump = " << ultimo->jump->val << endl;
+    }
+    Debuga(ultimo->parent);
 }
 
 int main(){
