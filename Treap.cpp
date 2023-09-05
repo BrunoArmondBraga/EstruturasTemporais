@@ -4,15 +4,12 @@
 
 using namespace std;
 
-
 class NodeTR{
-    private:
-        
     public:
         int val;
+        int priority;
         NodeTR *esq;
         NodeTR *dir;
-        int priority;
         NodeTR() { 
             esq = nullptr;
             dir = nullptr;
@@ -21,7 +18,7 @@ class NodeTR{
         NodeTR(int val){
             esq = nullptr;
             dir = nullptr;
-            priority = rand();
+            priority = rand() % 1000;
             this->val = val;
         }
         ~NodeTR(){
@@ -34,25 +31,12 @@ class NodeTR{
         }
 };
 
-
-
 class Treap {
     private: 
         NodeTR *raiz;
 
-        int get(NodeTR *no,int val){
-            if(no==nullptr) return -1;
-            if(no->val == val){
-                return no->val;
-            }
-            if(no->val > val){
-                return get(no->esq,val);
-            }
-            return get(no->dir,val);
-        }
-
         NodeTR* right_rotation(NodeTR *node){
-            NodeTR* new_root = node->esq;
+            NodeTR *new_root = node->esq;
             NodeTR *son = new_root->dir;
 
             new_root->dir = node;
@@ -62,7 +46,7 @@ class Treap {
         }
 
         NodeTR* left_rotation(NodeTR *node){
-            NodeTR* new_root = node->dir;
+            NodeTR *new_root = node->dir;
             NodeTR *son = new_root->esq;
 
             new_root->esq = node;
@@ -72,7 +56,6 @@ class Treap {
         }
 
         NodeTR* put(NodeTR *node,int val){
-            NodeTR *novo;
             if(node == nullptr){
                 NodeTR *inserir = new NodeTR(val); 
                 return inserir;
@@ -87,7 +70,7 @@ class Treap {
             } 
             else{ //vai pra direita!!
                 node->dir = put(node->dir,val);
-                if (node->esq != nullptr && node->dir->priority > node->priority){
+                if (node->dir != nullptr && node->dir->priority > node->priority){
                     node = left_rotation(node);
                 }
                 return node;
@@ -96,32 +79,34 @@ class Treap {
 
         NodeTR* remove_rec(NodeTR *node,int val){
             if(node == nullptr){
-                cout << "Não há o elemento com valor = " << val << " na treap atualmente!" << endl;
                 return nullptr;
             }
             if(node->val == val){
-                //tratamento de deleção
+                //tratamento de deleção;
                 if(node->dir == nullptr){
                     return node->esq;
                 }
                 else if(node->esq == nullptr){
                     return node->dir;
                 }
-                if(node->dir->priority > node->esq->priority){ // coloque 
-                    if(node->dir != nullptr){
-                        //node->
-                    }
-                    return node->dir;
+                if(node->dir->priority > node->esq->priority){ // direita sobe
+                    NodeTR *new_node = left_rotation(node);
+                    new_node->esq = remove_rec(new_node->esq, val);
+                    return new_node;
                 }
                 else{
-
+                    NodeTR *new_node = right_rotation(node);
+                    new_node->dir = remove_rec(new_node->dir, val);
+                    return new_node;
                 }
             }
             else if(node->val > val){ //vá pra esquerda!
                 node->esq = remove_rec(node->esq, val);
+                return node;
             }
             else{ //vá pra direita!
                 node->dir = remove_rec(node->dir, val);
+                return node;
             }
         }
 
@@ -133,15 +118,35 @@ class Treap {
             for(int j=0;j<i;j++){
                 cout << " ";
             }
-            cout << u->val;
+            cout << u->val << " " << u->priority;
             cout << endl;
 
             if(u->dir != nullptr){
                 debug_rec(u->dir, i+3);
             }
-            
         } 
 
+        int min(NodeTR *u){
+            if(u->esq == nullptr){
+                return u->val;
+            }
+            return min(u->esq);
+        }
+
+        bool search(NodeTR *u, int x){
+            if(u == nullptr){
+                return false;
+            }
+            if(u->val == x){
+                return true;
+            }
+            else if(u->val > x){
+                return search(u->esq,x);
+            }
+            else{
+                return search(u->dir,x);
+            }
+        }
 
     public:
         Treap() {
@@ -154,26 +159,53 @@ class Treap {
         void add (int val){
             raiz = put(raiz,val);
         }
-        int value(int val){ 
-            return get(raiz,val);
-        }
 
         void remove(int val){
-            remove_rec(this->raiz, val);
+            this->raiz = remove_rec(this->raiz, val);
         }
 
         void print(){
             debug_rec(this->raiz,0);
         }
+
+        int print_min(){
+            if(raiz == nullptr){
+                cout << "Treap vazia!" << endl;
+                return -1;
+            }
+            return min(this->raiz);
+        }
+
+        int print_search(int x){
+            return (search(this->raiz, x)? 1 : 0);
+        }
 };
 
 int main(){
+    int numero, x;
     Treap *tr = new Treap();
-    tr->add(9);
-    tr->add(1);
-    tr->add(3);
-    tr->add(2);
-    tr->add(23);
-    tr->add(7);
-    tr->print();
+
+    while(cin >> numero){
+        switch (numero)
+        {
+        case 1:
+            cin >> x;
+            tr->add(x);
+            break;
+        case 2:
+            cin >> x;
+            tr->remove(x);
+            break;
+        case 3:
+            cin >> x;
+            cout << tr->print_search(x) << endl;
+            break;
+        case 4:
+            cout << tr->print_min() << endl;;
+            break;
+        case 5:
+            tr->print();
+            break;
+        }
+    }
 }
