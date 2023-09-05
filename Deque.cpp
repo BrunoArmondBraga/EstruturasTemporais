@@ -85,7 +85,6 @@ Node* LowestCommonAncestor(Node *u, Node *v){
 }
 
 Node* search(deque d, int k){
-    //Kth(d,k): k-ésimo elemento de d, onde o front é o primeiro elemento de d
     Node *u = LowestCommonAncestor(d.first, d.last);
     int l1 = d.first->depth - u->depth;
     int l2 = d.last->depth - u->depth;
@@ -99,7 +98,6 @@ Node* search(deque d, int k){
 }
 
 deque Swap(deque d){
-    //cout << "função Swap!" << endl;
     return deque{d.last, d.first};
 }
 
@@ -151,6 +149,7 @@ int Back(deque d){
 }
 
 int Kth(deque d, int k){
+    //Kth(d,k): k-ésimo elemento de d, onde o front é o primeiro elemento de d
     if(d.first == nullptr){
         cout << "Deque inválida!" << endl;
         return -1;
@@ -166,7 +165,7 @@ void Print(deque d){
     }
     Node *u = LowestCommonAncestor(d.first, d.last);
     
-    if(u == d.first){ /* caso \ O(n)*/
+    if(u == d.first){ /* caso \ */
         vector<int> vector;
         Node* v = d.last;
         while(v != u->parent){
