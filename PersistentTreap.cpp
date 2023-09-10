@@ -35,9 +35,6 @@ class NodeTR{
         }
         
         NodeTR *copy(){
-            if(this == nullptr){
-                return nullptr;
-            }
             NodeTR *new_node = new NodeTR();
             new_node->esq = this->esq;
             new_node->dir = this->dir;
@@ -94,36 +91,53 @@ class PersistentTreap {
             }
         }
 
-        NodeTR* remove_rec(NodeTR *node,int val){
-            NodeTR *new_node = node->copy();
-            if(new_node == nullptr){
+        NodeTR* remove_rec(NodeTR *node,int val, int copy){
+            if(node == nullptr){
                 return nullptr;
             }
-            if(new_node->val == val){
+            if(node->val == val){
                 //tratamento de deleção;
-                if(new_node->dir == nullptr){
-                    return new_node->esq;
+                if(node->dir == nullptr){
+                    if(node->esq == nullptr){
+                        return nullptr;
+                    }
+                    NodeTR *final_node = node->esq->copy();
+                    return final_node;
                 }
-                else if(new_node->esq == nullptr){
-                    return new_node->dir;
+                else if(node->esq == nullptr){
+                    if(node->dir == nullptr){
+                        return nullptr;
+                    }
+                    NodeTR *final_node = node->dir->copy();
+                    return final_node;
                 }
-                if(new_node->dir->priority > new_node->esq->priority){ // direita sobe
-                    NodeTR *aux_node = left_rotation(new_node);
-                    aux_node->esq = remove_rec(aux_node->esq, val);
+
+                NodeTR *current_node = node;
+                if(copy == 0){
+                    NodeTR *new_node = node->copy();
+                    current_node = new_node;
+                }
+
+                if(current_node->dir->priority > current_node->esq->priority){ // direita sobe
+                    current_node->dir = current_node->dir->copy();
+                    NodeTR *aux_node = left_rotation(current_node);
+                    aux_node->esq = remove_rec(aux_node->esq, val,1);
                     return aux_node;
                 }
                 else{
-                    NodeTR *aux_node = right_rotation(new_node);
-                    aux_node->dir = remove_rec(aux_node->dir, val);
+                    current_node->esq = current_node->esq->copy();
+                    NodeTR *aux_node = right_rotation(current_node);
+                    aux_node->dir = remove_rec(aux_node->dir, val,1);
                     return aux_node;
                 }
             }
-            else if(new_node->val > val){ //vá pra esquerda!
-                new_node->esq = remove_rec(new_node->esq, val);
+            NodeTR *new_node = node->copy();
+            if(new_node->val > val){ //vá pra esquerda!
+                new_node->esq = remove_rec(new_node->esq, val,0);
                 return new_node;
             }
             else{ //vá pra direita!
-                new_node->dir = remove_rec(new_node->dir, val);
+                new_node->dir = remove_rec(new_node->dir, val,0);
                 return new_node;
             }
         }
@@ -178,6 +192,13 @@ class PersistentTreap {
             delete raiz;
         }
 
+        bool is_null(){
+            if(raiz == nullptr){
+                return true;
+            }
+            return false;
+        }
+
         PersistentTreap *add(int val){
             NodeTR *new_root = new NodeTR();
             new_root = put(this->raiz,val);
@@ -187,7 +208,11 @@ class PersistentTreap {
 
         PersistentTreap *remove(int val){
             NodeTR *new_root = new NodeTR();
-            new_root = remove_rec(this->raiz, val);
+            new_root = remove_rec(this->raiz, val,0);
+            if(new_root == nullptr){
+                PersistentTreap *null_treap = new PersistentTreap();
+                return null_treap;
+            }
             PersistentTreap *new_treap = new PersistentTreap(new_root); 
             return new_treap;
         }
@@ -210,8 +235,7 @@ class PersistentTreap {
 };
 
 int main(){
-    //srand(time(0));
-    srand(12345);
+    srand(time(0));
     vector<PersistentTreap*> vector;
     int numero, t, x;
     PersistentTreap *initial = new PersistentTreap();
@@ -242,12 +266,16 @@ int main(){
         case 5:
             cin >> t;
             vector[t]->print();
-            cout << "===========" << endl;
             break;
         case 6:
-            for(int i = 1; i < vector.size(); i++){
-                cout << "PRINTA A  " << i << "  treap:" << endl;
-                vector[i]->print();
+            for(int i = 0; i < vector.size(); i++){
+                cout << "PRINTA A TREAP  " << i << ": " << endl;
+                if(vector[i]->is_null()){
+                    cout << "Treap " << i << " é uma treap nula!" << endl;
+                }
+                else{
+                    vector[i]->print();
+                }
                 cout << endl;
             }
             cout << "--------------------------" << endl;
