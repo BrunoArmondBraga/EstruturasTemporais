@@ -210,7 +210,8 @@ class PersistentTreap {
 };
 
 int main(){
-    srand(time(0));
+    //srand(time(0));
+    srand(12345);
     vector<PersistentTreap*> vector;
     int numero, t, x;
     PersistentTreap *initial = new PersistentTreap();
@@ -241,6 +242,15 @@ int main(){
         case 5:
             cin >> t;
             vector[t]->print();
+            cout << "===========" << endl;
+            break;
+        case 6:
+            for(int i = 1; i < vector.size(); i++){
+                cout << "PRINTA A  " << i << "  treap:" << endl;
+                vector[i]->print();
+                cout << endl;
+            }
+            cout << "--------------------------" << endl;
             break;
         }
     }
