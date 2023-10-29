@@ -1,6 +1,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <string>
+#include <vector>
 
 using namespace std;
 
@@ -8,17 +9,17 @@ class Node{
     private:
         
     public:
-        int key;
+        int val;
         Node *esq;
         Node *dir;
         Node() { 
             esq = nullptr;
             dir = nullptr;
         };
-        Node(int val){
+        Node(int key){
             esq = nullptr;
             dir = nullptr;
-            this->key = val;
+            this->val = key;
         }
         ~Node() {
             if(esq != nullptr){
@@ -28,39 +29,48 @@ class Node{
                 delete dir;
             }
         }
+        Node *copy(){
+            Node *new_node = new Node();
+            new_node->esq = this->esq;
+            new_node->dir = this->dir;
+            new_node->val = this->val;
+            return new_node;
+        }
 };
 
 class Abb {
     private: 
-        Node *raiz;
+        Node *root;
 
-        Node *put(Node *araiz,int val){
-            if(araiz == nullptr){
-                Node *inserir = new Node(val); 
-                return inserir;
+        Node* put(Node *node,int val){
+            if(node == nullptr){
+                Node *insert = new Node(val); 
+                return insert;
             }
-            if(araiz->key == val){ //chave igual
-                //tratamento chave igual!
-                cout << "A árvore de busca binária não aceita chaves repetidas!" << endl;
-            }
-            else if(araiz->key > val){ //chave menor
-                araiz->esq = put(araiz->esq,val);
+            Node *new_node = node->copy();
+            if(new_node->val > val){ //vai pra esquerda!
+                new_node->esq = put(new_node->esq,val);
+                return new_node;
             } 
-            else{ //chave maior
-                araiz->dir = put(araiz->dir,val);
+            else{ //vai pra direita!
+                new_node->dir = put(new_node->dir,val);
+                return new_node;
             }
-            return araiz;
         }
 
-        int get(Node *no,int key){
-            if(no==nullptr) return 0;
-            if(no->key == key){
-                return no->key;
+        bool search(Node *u, int x){
+            if(u == nullptr){
+                return false;
             }
-            if(no->key > key){
-                return get(no->esq,key);
+            if(u->val == x){
+                return true;
             }
-            return get(no->dir,key);
+            else if(u->val > x){
+                return search(u->esq,x);
+            }
+            else{
+                return search(u->dir,x);
+            }
         }
 
         void debug_rec(Node *u, int i){
@@ -71,43 +81,143 @@ class Abb {
             for(int j=0;j<i;j++){
                 cout << " ";
             }
-            cout << u->key;
+            cout << u->val;
             cout << endl;
 
             if(u->dir != nullptr){
                 debug_rec(u->dir, i+3);
             }
             
-        }        
+        }   
+
+        int min(Node *u){
+            if(u->esq == nullptr){
+                return u->val;
+            }
+            return min(u->esq);
+        }    
+
+        Node* remove_rec(Node *node,int val){
+            if(node == nullptr){
+                return nullptr;
+            }
+            if(node->val == val){
+                //tratamento de deleção;
+                if(node->dir == nullptr){
+                    return node->esq;
+                }
+                else if(node->esq == nullptr){
+                    return node->dir;
+                }
+                else{
+                    //CASO COM DOIS FILHOS!!
+                    int last = min(node->dir);
+                    Node *final_node = node->copy();
+                    final_node->val = last;
+                    final_node->dir = remove_rec(final_node->dir,last);
+                    return final_node;
+                }
+
+                Node *current_node = node;
+            }
+            Node *new_node = node->copy();
+            if(new_node->val > val){ //vá pra esquerda!
+                new_node->esq = remove_rec(new_node->esq, val);
+                return new_node;
+            }
+            else{ //vá pra direita!
+                new_node->dir = remove_rec(new_node->dir, val);
+                return new_node;
+            }
+        }
         
     public:
         Abb() {
-            raiz = nullptr;
+            root = nullptr;
+        }
+        Abb(Node *u) {
+            root = u;
         }
         ~Abb() {
-            delete raiz;
-        }
-        
-        void add (int val){
-           raiz = put(raiz,val);
+            delete root;
         }
 
-        int value(int key){
-            return get(raiz,key);
+        Abb *add(int val){
+            Node *new_root = new Node();
+            new_root = put(this->root,val);
+            Abb *new_abb = new Abb(new_root); 
+            return new_abb;
         }
 
         void print(){
-            debug_rec(this->raiz,0);
+            debug_rec(this->root,0);
+        }
+
+        int print_search(int x){
+            return (search(this->root, x)? 1 : 0);
+        }
+
+        int print_min(){
+            if(root == nullptr){
+                cout << "ABB vazia!" << endl;
+                return -1;
+            }
+            return min(this->root);
+        }
+
+        Abb *remove(int val){
+            Node *new_root = new Node();
+            new_root = remove_rec(this->root, val);
+            if(new_root == nullptr){
+                Abb *null_treap = new Abb();
+                return null_treap;
+            }
+            Abb *new_treap = new Abb(new_root); 
+            return new_treap;
         }
         
 };
 
 int main(){
-    Abb *abb = new Abb();
-    abb->add(2);
-    abb->add(1);
-    abb->add(3);
-    abb->print();
+    vector<Abb*> vector;
+    int numero, t, x;
+    Abb *initial = new Abb();
+    vector.push_back(initial);
 
-    delete abb;
+    while(cin >> numero){
+        switch (numero)
+        {
+        case 1:
+            cin >> t;
+            cin >> x;
+            vector.push_back(vector[t]->add(x));
+            break;
+        case 2:
+            cin >> t;
+            cin >> x;
+            vector.push_back(vector[t]->remove(x));
+            break;
+        case 3:
+            cin >> t;
+            cin >> x;
+            cout << vector[t]->print_search(x) << endl;
+            break;
+        case 4:
+            cin >> t;
+            cout << vector[t]->print_min() << endl;;
+            break;
+        case 5:
+            cin >> t;
+            vector[t]->print();
+            break;
+        case 6:
+            for(int i = 1; i < vector.size(); i++){
+                cout << "PRINTA A ABB  " << i << ": " << endl;
+                vector[i]->print();
+                cout << endl;
+            }
+            cout << "--------------------------" << endl;
+            break;
+        }
+    }
 }
