@@ -63,18 +63,17 @@ class Treap {
             //nao faz tratamento de chaves iguais!
             if(node->val > val){ //vai pra esquerda!
                 node->esq = put(node->esq,val);
-                if (node->esq != nullptr && node->esq->priority > node->priority){
+                if (node->esq->priority > node->priority){
                     node = right_rotation(node);
                 }
-                return node;
             } 
             else{ //vai pra direita!!
                 node->dir = put(node->dir,val);
-                if (node->dir != nullptr && node->dir->priority > node->priority){
+                if (node->dir->priority > node->priority){
                     node = left_rotation(node);
                 }
-                return node;
             }
+            return node;
         }
 
         NodeTR* remove_rec(NodeTR *node,int val){
