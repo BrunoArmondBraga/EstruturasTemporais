@@ -77,18 +77,17 @@ class PersistentTreap {
             //nao faz tratamento de chaves iguais!
             if(new_node->val > val){ //vai pra esquerda!
                 new_node->esq = put(new_node->esq,val);
-                if (new_node->esq != nullptr && new_node->esq->priority > new_node->priority){
+                if (new_node->esq->priority > new_node->priority){
                     new_node = right_rotation(new_node);
                 }
-                return new_node;
             } 
             else{ //vai pra direita!!
                 new_node->dir = put(new_node->dir,val);
-                if (new_node->dir != nullptr && new_node->dir->priority > new_node->priority){
+                if (new_node->dir->priority > new_node->priority){
                     new_node = left_rotation(new_node);
                 }
-                return new_node;
             }
+            return new_node;
         }
 
         NodeTR* remove_rec(NodeTR *node,int val, int copy){
@@ -98,18 +97,10 @@ class PersistentTreap {
             if(node->val == val){
                 //tratamento de deleção;
                 if(node->dir == nullptr){
-                    if(node->esq == nullptr){
-                        return nullptr;
-                    }
-                    NodeTR *final_node = node->esq->copy();
-                    return final_node;
+                    return node->esq;
                 }
                 else if(node->esq == nullptr){
-                    if(node->dir == nullptr){
-                        return nullptr;
-                    }
-                    NodeTR *final_node = node->dir->copy();
-                    return final_node;
+                    return node->dir;
                 }
 
                 NodeTR *current_node = node;

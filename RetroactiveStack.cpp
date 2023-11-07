@@ -251,11 +251,8 @@ class RetroactiveStack {
             else{ //vai pra direita!!
                 s_kth = search_kth(node->dir, t, s_kth);
             }
-            if(s_kth.found != nullptr){
+            if(s_kth.found != nullptr || went_left){
                 return s_kth;
-            }
-            if(went_left){
-                return struct_kth{s_kth.k, -1, nullptr};
             }
             if(node->esq->smax >= s_kth.k){
                 return struct_kth{s_kth.k, this->find_push(node->esq,s_kth.k), node};

@@ -196,17 +196,13 @@ void* k_th(RecursiveDeque *d, int k){
     if(d->prefix != nullptr){
         index = k - 1;
     }
-
-    double arredonda_pra_cima = index;
-    arredonda_pra_cima = ceil(arredonda_pra_cima / DOIS);
-    int resultado = static_cast<int>(arredonda_pra_cima);
+    
+    par aux = *(par*)k_th(d->center, (index+1)/2);
 
     if(index % 2 != 0){
-        par aux = *(par*)k_th(d->center, resultado);
         return aux.first;
     }
     else{
-        par aux = *(par*)k_th(d->center, resultado);
         return aux.second;
     }
 }
@@ -243,7 +239,7 @@ void print_instructions(){
     cout << " 7 <t> <k> significa println(k_th(d_t, k))" << endl;
     cout << " 8 <t>     significa print(d_t)" << endl;
     cout << " 9         significa print_all()" << endl;
-    cout << "10        significa print_instructions" << endl;
+    cout << "10         significa print_instructions" << endl;
     cout << endl;
 }
 
