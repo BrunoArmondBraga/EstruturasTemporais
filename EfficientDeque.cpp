@@ -8,9 +8,11 @@
 
 using namespace std;
 
-//na verdade parando para pensar é necessário que as deques possuam as deques dentro delas.
-//é necessário que as sub-deques sejam deques também se possível, ou haverá incoerência de
-//implementações.
+struct par{
+    void* first;
+    void* second;
+    int number;
+};
 
 class SubDeque{
     public:
@@ -20,25 +22,38 @@ class SubDeque{
         
     }
 
-    void* push_front(void* insert_front){
+    void push_front(void* insert_front){
         sequence.insert(sequence.begin(), insert_front);
     }
 
-    void* push_back(void* insert_back){
+    void push_back(void* insert_back){
         sequence.push_back(insert_back);
     }
 
     void* pop_front(){
+        if(sequence.size() < 1){
+            cout << "Impossível dar pop_front em sub_deque vazia!" << endl;
+            return nullptr;
+        }
+        void* pointer = sequence[0];
         sequence.erase(sequence.begin());
+        return pointer;
     }
 
     void* pop_back(){
+        if(sequence.size() < 1){
+            cout << "Impossível dar pop_back em sub_deque vazia!" << endl;
+            return nullptr;
+        }
+        void* finish = sequence[sequence.size() - 1];
         sequence.pop_back();
+        return finish;
+        
     }
 
     void* front(){
         if(sequence.size() < 1){
-            cout << "Não é possível fazer a operação front em uma deque vazia!" << endl;
+            cout << "Não é possível fazer a operação front em uma subdeque vazia!" << endl;
             return nullptr;
         }
         return sequence[0];
@@ -56,6 +71,14 @@ class SubDeque{
         return sequence.size();
     }
 
+    SubDeque* copy(){
+        SubDeque* new_sub_deque = new SubDeque();
+        for(int i = 0; i < sequence.size(); i++){
+            new_sub_deque->sequence.push_back(sequence[i]);
+        }
+        return new_sub_deque;
+    }
+
 };
 
 class EfficientDeque{
@@ -67,10 +90,10 @@ class EfficientDeque{
     SubDeque *suffix;
 
     EfficientDeque(){
-        preffix = nullptr;
+        preffix = new SubDeque();
+        suffix = new SubDeque();
         child = nullptr;
         next = nullptr;
-        suffix = nullptr;
     }  
 
     EfficientDeque(SubDeque* p,SubDeque* s){
@@ -82,17 +105,111 @@ class EfficientDeque{
 
     EfficientDeque* copy(){
       EfficientDeque *new_deque = new EfficientDeque();
-      new_deque->preffix = this->preffix;
+      if(this->preffix != nullptr){
+        new_deque->preffix = this->preffix->copy();
+      }
+      if(this->suffix != nullptr){
+        new_deque->suffix = this->suffix->copy();
+      }
       new_deque->child = this->child;
       new_deque->next = this->next;
-      new_deque->suffix = this->suffix;
+      return new_deque;
+    }
+
+    void print(){
+        EfficientDeque* current = this;
+        EfficientDeque* aux = this->next;
+        int i = 0;
+        while(current != nullptr || aux != nullptr){
+            if(current == nullptr){
+                current = aux;
+                aux = nullptr;
+            }
+            cout << "prefix = ";
+            for(int j = 0; j < current->preffix->sequence.size(); j++){
+                if(i == 0){
+                    int resultado = *(int*) current->preffix->sequence[j];
+                    cout << resultado << " ";
+                }
+                else if(i == 1){
+                    par resultado_par = *(par*) current->preffix->sequence[j];
+                    int resultado = *(int*) resultado_par.first;
+                    cout << "(";
+                    cout << resultado << " ";
+                    resultado = *(int*) resultado_par.second;
+                    cout << resultado;
+                    cout << ") ";
+                }
+                else{
+                    par major_resultado_par = *(par*) current->preffix->sequence[j];
+                    par primeiro_par = *(par*) major_resultado_par.first;
+                    par segundo_par = *(par*) major_resultado_par.second;
+
+                    cout << "(";
+                    int resultado = *(int*) primeiro_par.first;
+                    cout << "(";
+                    cout << resultado << " ";
+                    resultado = *(int*) primeiro_par.second;
+                    cout << resultado;
+                    cout << ") ";
+
+                    resultado = *(int*) segundo_par.first;
+                    cout << "(";
+                    cout << resultado << " ";
+                    resultado = *(int*) segundo_par.second;
+                    cout << resultado;
+                    cout << ")";
+                    cout << ")";
+                }
+            }
+            cout << "      ";
+            cout << "suffix = ";
+            for(int j = 0; j < current->suffix->sequence.size(); j++){
+                if(i == 0){
+                    int resultado = *(int*) current->suffix->sequence[j];
+                    cout << resultado << " ";
+                }
+                else if(i == 1){
+                    par resultado_par = *(par*) current->suffix->sequence[j];
+                    int resultado = *(int*) resultado_par.first;
+                    cout << "(";
+                    cout << resultado << " ";
+                    resultado = *(int*) resultado_par.second;
+                    cout << resultado;
+                    cout << ") ";
+                }
+                else{
+                    par major_resultado_par = *(par*) current->suffix->sequence[j];
+                    par primeiro_par = *(par*) major_resultado_par.first;
+                    par segundo_par = *(par*) major_resultado_par.second;
+
+                    cout << "(";
+                    int resultado = *(int*) primeiro_par.first;
+                    cout << "(";
+                    cout << resultado << " ";
+                    resultado = *(int*) primeiro_par.second;
+                    cout << resultado;
+                    cout << ") ";
+
+                    resultado = *(int*) segundo_par.first;
+                    cout << "(";
+                    cout << resultado << " ";
+                    resultado = *(int*) segundo_par.second;
+                    cout << resultado;
+                    cout << ")";
+                    cout << ")";
+                }
+            }
+            cout << endl;
+            if(current->next != nullptr){
+                aux = current->next;
+            }
+            current = current->child;
+            i++;
+        }
     }
 };
 
-struct par{
-    void* first;
-    void* second;
-};
 
 void* copy_int(const void* src) {
     void* new_int = malloc(sizeof(int));
@@ -111,32 +228,50 @@ void fix_deques(SubDeque* l, SubDeque* r, SubDeque* L, SubDeque* R){
         void* b = l->pop_back();
         void* a = l->pop_back();
         //criar par
-        L->push_front((a,b)); //tem que passar o void pointer!
+        par new_par = {a,b};
+        L->push_front(copy_par(&new_par)); //tem que passar o void pointer!
     }
     if(r->size() >= 4){ 
         void* a = r->pop_front();
         void* b = r->pop_front();
         //criar par
-        R->push_front((a,b)); //tem que passar o void pointer!
+        par new_par = {a,b};
+        R->push_back(copy_par(&new_par)); //tem que passar o void pointer!
     }
-    
+
     if(l->size() <= 1){
+        void* a;
+        void* b;
         if(L->size() != 0){
-            (a,b) = L->pop_front();
+            void* pointer = L->pop_front();
+            par new_par = *(par*) pointer;
+            a = new_par.first;
+            b = new_par.second;
         }
         else{
-            (a,b) = R->pop_front();
+            void* pointer = R->pop_front();
+            par new_par = *(par*) pointer;
+            a = new_par.first;
+            b = new_par.second;
         }
 
         l->push_back(a);
         l->push_back(b);
     }
     if(r->size() <= 1){
+        void* a;
+        void* b;
         if(R->size() != 0){
-            (a,b) = R->pop_back();
+            void* pointer = R->pop_back();
+            par new_par = *(par*) pointer;
+            a = new_par.second;
+            b = new_par.first;
         }
         else{
-            (a,b) = L->pop_back();
+            void* pointer = L->pop_back();
+            par new_par = *(par*) pointer;
+            a = new_par.first;
+            b = new_par.second;
         }
         r->push_front(b);
         r->push_front(a);
@@ -145,16 +280,16 @@ void fix_deques(SubDeque* l, SubDeque* r, SubDeque* L, SubDeque* R){
 }
 
 int digit(EfficientDeque* a, bool last){
-    vector<int> digito = {2,1,0,0,1,2};
+    vector<int> digito = {2, 1, 0, 0, 1, 2};
     if(a->preffix->size() == 0 && last){
-        return digito[a->suffix->size() + 1];
+        return digito[a->suffix->size()];
     }
     else if(a->suffix->size() == 0 && last){
-        return digito[a->preffix->size() + 1];
+        return digito[a->preffix->size()];
     }
     else{
-        int um = digito[a->preffix->size() + 1];
-        int dois = digito[a->suffix->size() + 1];
+        int um = digito[a->preffix->size()];
+        int dois = digito[a->suffix->size()];
         if(um > dois){
             return um;
         }
@@ -182,14 +317,26 @@ void fix(EfficientDeque* a){
         last = true;
     }
 
-    if(a->preffix->size() + a->suffix->size() + 2 * b->preffix->size() + 2 * b->suffix->size()){
+    if(a->preffix->size() + a->suffix->size() + 2 * b->preffix->size() + 2 * b->suffix->size() <= 3){
+        void* x;
+        void* y;
         if(b->preffix->size() != 0){
-            (x,y) = b->preffix->pop_front();
+            void* pointer = b->preffix->pop_front();
+            par new_par = *(par*) pointer;
+
+            x = new_par.first;
+            y = new_par.second;
+
             a->preffix->push_back(x);
             a->preffix->push_back(y);
         }
         if(b->preffix->size() != 0){
-            (x,y) = b->suffix->pop_front();
+            void* pointer = b->suffix->pop_front();
+            par new_par = *(par*) pointer;
+
+            x = new_par.first;
+            y = new_par.second;
+
             a->preffix->push_back(x);
             a->preffix->push_back(y);
         }
@@ -213,7 +360,7 @@ void fix(EfficientDeque* a){
         a->child = b;
     }
     else{
-        if(b->child != nullptr && a->child != nullptr){
+        if(b != nullptr && b->child != nullptr && a->child != nullptr){ //b != nullptr
             b->next = a->next;
         }
         a->next = b;
@@ -240,10 +387,28 @@ void check(EfficientDeque* a){
     }
 }
 
-EfficientDeque* push_front(EfficientDeque* a, int x){
-    EfficientDeque* b = a->copy();
-    //fazer copia do inteiro!
+EfficientDeque* push_front(EfficientDeque* a, void* x){
+    EfficientDeque* b;
+    if(a != nullptr){
+        b = a->copy();
+    }
+    else{
+        b = new EfficientDeque();
+    }
     b->preffix->push_front(x);
+    check(b);
+    return b;
+}
+
+EfficientDeque* push_back(EfficientDeque* a, void* x){
+    EfficientDeque* b;
+    if(a != nullptr){
+        b = a->copy();
+    }
+    else{
+        b = new EfficientDeque();
+    }
+    b->suffix->push_back(x);
     check(b);
     return b;
 }
@@ -255,6 +420,18 @@ EfficientDeque* pop_front(EfficientDeque* a){
     }
     else{
         b->suffix->pop_front();
+    }
+    check(b);
+    return b;
+}
+
+EfficientDeque* pop_back(EfficientDeque* a){
+    EfficientDeque* b = a->copy();
+    if(b->suffix->size() != 0){
+        void *c = b->suffix->pop_back();
+    }
+    else{
+        void *c = b->preffix->pop_back();
     }
     check(b);
     return b;
@@ -274,10 +451,10 @@ int front(EfficientDeque* a){
 int back(EfficientDeque* a){
     int resultado;
     if(a->suffix->size() != 0){
-        resultado = *(int*) a->suffix->front();
+        resultado = *(int*) a->suffix->back();
     }
     else{
-        resultado = *(int*) a->preffix->front();
+        resultado = *(int*) a->preffix->back();
     }
     return resultado;
 }
@@ -316,29 +493,60 @@ int main() {
             int a;
             cin >> t;
             cin >> a;
-            //vector.push_back(push_front(vector[t],copy_int(&a)));
+            if(t > vector.size() - 1){
+                cout << "Não há uma deque " << t << endl;
+            }
+            else{
+                vector.push_back(push_front(vector[t],copy_int(&a)));
+            }
             break;
         case 2:
             int b;
             cin >> t;
             cin >> b;
-            //vector.push_back(push_back(vector[t],copy_int(&b)));
+            vector.push_back(push_back(vector[t],copy_int(&b)));
             break;
         case 3:
             cin >> t;
-            //vector.push_back(pop_front(vector[t]));
+            if(t > vector.size() - 1){
+                cout << "Não há uma deque " << t << endl;
+            }
+            else{
+                vector.push_back(pop_front(vector[t]));
+            }
             break;
         case 4:
             cin >> t;
-            //vector.push_back(pop_back(vector[t]));
+            if(t > vector.size() - 1){
+                cout << "Não há uma deque " << t << endl;
+            }
+            else{
+                vector.push_back(pop_back(vector[t]));
+            }
             break;
         case 5:
             cin >> t;
-            //cout << front_question(vector[t]) << endl;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "Não há uma deque " << t << endl;
+            }
+            else if(vector[t] == nullptr){
+                cout << "Não há elementos nessa deque!" << endl;
+            }
+            else{
+                cout << front(vector[t]) << endl;
+            }
             break;
         case 6:
             cin >> t;
-            //cout << back_question(vector[t]) << endl;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "Não há uma deque " << t << endl;
+            }
+            else if(vector[t] == nullptr){
+                cout << "Não há elementos nessa deque!" << endl;
+            }
+            else{
+                cout << back(vector[t]) << endl;
+            }
             break;
         case 7:
             cin >> t;
@@ -347,13 +555,41 @@ int main() {
             break;
         case 8:
             cin >> t;
-            //print(vector[t]);
-            break;
-        case 9:
-            for(int i = 0; i < vector.size(); i++){
-                //print(vector[i]);
+            if(t < 0 || t > vector.size() - 1){
+                cout << "Não há uma deque " << t << endl;
+            }
+            else if(vector[t] == nullptr){
+                cout << "Não há elementos nessa deque!" << endl;
+            }
+            else{
+                cout << "("  << front(vector[t]) << "," << back(vector[t]) << ")" << endl;
             }
             break;
+        case 9:
+            EfficientDeque* aux;
+            for(int i = 0; i < vector.size(); i++){
+                cout << "Deque de numero  :  " << i << endl;
+                aux = vector[i];
+                if(aux != nullptr){
+                    aux->print();
+                }
+                else{
+                    cout << "Deque sem elementos!" << endl;
+                }
+                cout << endl;
+            }
+            break;
+        case 11:
+            for(int i = 0; i < vector.size(); i++){
+                cout << "Deque " << i << endl;
+                if(vector[i] != nullptr){
+                    cout << "("  << front(vector[i]) << "," << back(vector[i]) << ")" << endl;
+                }
+                else{
+                    cout << "Não há elementos nessa deque!" << endl;
+                }
+                cout << endl;
+            }
         }
     }
 
