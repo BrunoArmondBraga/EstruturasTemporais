@@ -1,26 +1,19 @@
 #include <iostream>
-#include <stdlib.h>
 #include <vector>
 #include <cstring>
-#include <cmath>
-
-#define DOIS 2.0
 
 using namespace std;
 
 struct par{
     void* first;
     void* second;
-    int number;
 };
 
 class SubDeque{
-    public:
+public:
     vector<void*> sequence;
 
-    SubDeque(){
-        
-    }
+    SubDeque(){}
 
     void push_front(void* insert_front){
         sequence.insert(sequence.begin(), insert_front);
@@ -115,91 +108,42 @@ class EfficientDeque{
       new_deque->next = this->next;
       return new_deque;
     }
+    
+    void debug_rec(void* pointer, int k){
+        if(k == 1){
+            int result = *(int*) pointer;
+            cout << result << " ";
+        }
+        else{
+            par result_par = *(par*) pointer;
+            cout << "( ";
+            debug_rec(result_par.first, k-1);
+            debug_rec(result_par.second, k-1);
+            cout << ")";
+            cout << " ";
+        }
+    }
 
     void print(){
         EfficientDeque* current = this;
         EfficientDeque* aux = this->next;
-        int i = 0;
+        int i = 1;
         while(current != nullptr || aux != nullptr){
             if(current == nullptr){
                 current = aux;
                 aux = nullptr;
             }
-            cout << "prefix = ";
+            cout << "( ";
             for(int j = 0; j < current->preffix->sequence.size(); j++){
-                if(i == 0){
-                    int resultado = *(int*) current->preffix->sequence[j];
-                    cout << resultado << " ";
-                }
-                else if(i == 1){
-                    par resultado_par = *(par*) current->preffix->sequence[j];
-                    int resultado = *(int*) resultado_par.first;
-                    cout << "(";
-                    cout << resultado << " ";
-                    resultado = *(int*) resultado_par.second;
-                    cout << resultado;
-                    cout << ") ";
-                }
-                else{
-                    par major_resultado_par = *(par*) current->preffix->sequence[j];
-                    par primeiro_par = *(par*) major_resultado_par.first;
-                    par segundo_par = *(par*) major_resultado_par.second;
-
-                    cout << "(";
-                    int resultado = *(int*) primeiro_par.first;
-                    cout << "(";
-                    cout << resultado << " ";
-                    resultado = *(int*) primeiro_par.second;
-                    cout << resultado;
-                    cout << ") ";
-
-                    resultado = *(int*) segundo_par.first;
-                    cout << "(";
-                    cout << resultado << " ";
-                    resultado = *(int*) segundo_par.second;
-                    cout << resultado;
-                    cout << ")";
-                    cout << ")";
-                }
+                debug_rec(current->preffix->sequence[j],i);
             }
+            cout << ")";
             cout << "      ";
-            cout << "suffix = ";
+            cout << "( ";
             for(int j = 0; j < current->suffix->sequence.size(); j++){
-                if(i == 0){
-                    int resultado = *(int*) current->suffix->sequence[j];
-                    cout << resultado << " ";
-                }
-                else if(i == 1){
-                    par resultado_par = *(par*) current->suffix->sequence[j];
-                    int resultado = *(int*) resultado_par.first;
-                    cout << "(";
-                    cout << resultado << " ";
-                    resultado = *(int*) resultado_par.second;
-                    cout << resultado;
-                    cout << ") ";
-                }
-                else{
-                    par major_resultado_par = *(par*) current->suffix->sequence[j];
-                    par primeiro_par = *(par*) major_resultado_par.first;
-                    par segundo_par = *(par*) major_resultado_par.second;
-
-                    cout << "(";
-                    int resultado = *(int*) primeiro_par.first;
-                    cout << "(";
-                    cout << resultado << " ";
-                    resultado = *(int*) primeiro_par.second;
-                    cout << resultado;
-                    cout << ") ";
-
-                    resultado = *(int*) segundo_par.first;
-                    cout << "(";
-                    cout << resultado << " ";
-                    resultado = *(int*) segundo_par.second;
-                    cout << resultado;
-                    cout << ")";
-                    cout << ")";
-                }
+                debug_rec(current->suffix->sequence[j],i);
             }
+            cout << ")";
             cout << endl;
             if(current->next != nullptr){
                 aux = current->next;
@@ -209,7 +153,6 @@ class EfficientDeque{
         }
     }
 };
-
 
 void* copy_int(const void* src) {
     void* new_int = malloc(sizeof(int));
@@ -227,16 +170,16 @@ void fix_deques(SubDeque* l, SubDeque* r, SubDeque* L, SubDeque* R){
     if(l->size() >= 4){
         void* b = l->pop_back();
         void* a = l->pop_back();
-        //criar par
+        //create par
         par new_par = {a,b};
-        L->push_front(copy_par(&new_par)); //tem que passar o void pointer!
+        L->push_front(copy_par(&new_par));
     }
     if(r->size() >= 4){ 
         void* a = r->pop_front();
         void* b = r->pop_front();
-        //criar par
+        //create par
         par new_par = {a,b};
-        R->push_back(copy_par(&new_par)); //tem que passar o void pointer!
+        R->push_back(copy_par(&new_par));
     }
 
     if(l->size() <= 1){
@@ -360,7 +303,7 @@ void fix(EfficientDeque* a){
         a->child = b;
     }
     else{
-        if(b != nullptr && b->child != nullptr && a->child != nullptr){ //b != nullptr
+        if(b != nullptr && a->child != nullptr){
             b->next = a->next;
         }
         a->next = b;
@@ -438,39 +381,39 @@ EfficientDeque* pop_back(EfficientDeque* a){
 }
 
 int front(EfficientDeque* a){
-    int resultado;
+    int result;
     if(a->preffix->size() != 0){
-        resultado = *(int*) a->preffix->front();
+        result = *(int*) a->preffix->front();
     }
     else{
-        resultado = *(int*) a->suffix->front();
+        result = *(int*) a->suffix->front();
     }
-    return resultado;
+    return result;
 }
 
 int back(EfficientDeque* a){
-    int resultado;
+    int result;
     if(a->suffix->size() != 0){
-        resultado = *(int*) a->suffix->back();
+        result = *(int*) a->suffix->back();
     }
     else{
-        resultado = *(int*) a->preffix->back();
+        result = *(int*) a->preffix->back();
     }
-    return resultado;
+    return result;
 }
 
 void print_instructions(){
     cout << "Codificação das operações:" << endl;
+    cout << " 0         significa print_instructions" << endl;
     cout << " 1 <t> <x> significa d_ultima+1 = push_front(d_t, x)" << endl;
     cout << " 2 <t> <x> significa d_ultima+1 = push_back(d_t, x)" << endl;
     cout << " 3 <t>     significa d_ultima+1 = pop_front(d_t)" << endl;
     cout << " 4 <t>     significa d_ultima+1 = pop_back(d_t)" << endl;
     cout << " 5 <t>     significa println(front(d_t))" << endl;
     cout << " 6 <t>     significa println(back(d_t))" << endl;
-    cout << " 7 <t> <k> significa println(k_th(d_t, k))" << endl;
-    cout << " 8 <t>     significa print(d_t)" << endl;
-    cout << " 9         significa print_all()" << endl;
-    cout << "10         significa print_instructions" << endl;
+    cout << " 7 <t>     significa print(d_t)" << endl;
+    cout << " 8         significa print_all()" << endl;
+    //cout << " 9 <t> <k> significa println(k_th(d_t, k))" << endl;
     cout << endl;
 }
 
@@ -480,10 +423,8 @@ int main() {
     vector<EfficientDeque*> vector;
     vector.push_back(nullptr);
 
-    bool continuar = true;
-
     int n, t, k;
-    while(continuar && cin >> n){
+    while(cin >> n){
         switch (n)
         {
         case 0:
@@ -550,11 +491,6 @@ int main() {
             break;
         case 7:
             cin >> t;
-            cin >> k;
-            //cout << k_th_question(vector[t],k) << endl;
-            break;
-        case 8:
-            cin >> t;
             if(t < 0 || t > vector.size() - 1){
                 cout << "Não há uma deque " << t << endl;
             }
@@ -562,10 +498,10 @@ int main() {
                 cout << "Não há elementos nessa deque!" << endl;
             }
             else{
-                cout << "("  << front(vector[t]) << "," << back(vector[t]) << ")" << endl;
+                vector[t]->print();
             }
-            break;
-        case 9:
+            break;           
+        case 8:
             EfficientDeque* aux;
             for(int i = 0; i < vector.size(); i++){
                 cout << "Deque de numero  :  " << i << endl;
@@ -579,17 +515,6 @@ int main() {
                 cout << endl;
             }
             break;
-        case 11:
-            for(int i = 0; i < vector.size(); i++){
-                cout << "Deque " << i << endl;
-                if(vector[i] != nullptr){
-                    cout << "("  << front(vector[i]) << "," << back(vector[i]) << ")" << endl;
-                }
-                else{
-                    cout << "Não há elementos nessa deque!" << endl;
-                }
-                cout << endl;
-            }
         }
     }
 
