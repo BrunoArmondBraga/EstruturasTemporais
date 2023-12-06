@@ -77,20 +77,20 @@ public:
 class EfficientDeque{
     public:
 
-    SubDeque *preffix;
+    SubDeque *prefix;
     EfficientDeque *child;
     EfficientDeque *next;
     SubDeque *suffix;
 
     EfficientDeque(){
-        preffix = new SubDeque();
+        prefix = new SubDeque();
         suffix = new SubDeque();
         child = nullptr;
         next = nullptr;
     }  
 
     EfficientDeque(SubDeque* p,SubDeque* s){
-        preffix = p;
+        prefix = p;
         suffix = s;
         child = nullptr;
         next = nullptr;
@@ -98,8 +98,8 @@ class EfficientDeque{
 
     EfficientDeque* copy(){
       EfficientDeque *new_deque = new EfficientDeque();
-      if(this->preffix != nullptr){
-        new_deque->preffix = this->preffix->copy();
+      if(this->prefix != nullptr){
+        new_deque->prefix = this->prefix->copy();
       }
       if(this->suffix != nullptr){
         new_deque->suffix = this->suffix->copy();
@@ -134,8 +134,8 @@ class EfficientDeque{
                 aux = nullptr;
             }
             cout << "( ";
-            for(int j = 0; j < current->preffix->sequence.size(); j++){
-                debug_rec(current->preffix->sequence[j],i);
+            for(int j = 0; j < current->prefix->sequence.size(); j++){
+                debug_rec(current->prefix->sequence[j],i);
             }
             cout << ")";
             cout << "      ";
@@ -224,14 +224,14 @@ void fix_deques(SubDeque* l, SubDeque* r, SubDeque* L, SubDeque* R){
 
 int digit(EfficientDeque* a, bool last){
     vector<int> digito = {2, 1, 0, 0, 1, 2};
-    if(a->preffix->size() == 0 && last){
+    if(a->prefix->size() == 0 && last){
         return digito[a->suffix->size()];
     }
     else if(a->suffix->size() == 0 && last){
-        return digito[a->preffix->size()];
+        return digito[a->prefix->size()];
     }
     else{
-        int um = digito[a->preffix->size()];
+        int um = digito[a->prefix->size()];
         int dois = digito[a->suffix->size()];
         if(um > dois){
             return um;
@@ -260,37 +260,37 @@ void fix(EfficientDeque* a){
         last = true;
     }
 
-    if(a->preffix->size() + a->suffix->size() + 2 * b->preffix->size() + 2 * b->suffix->size() <= 3){
+    if(a->prefix->size() + a->suffix->size() + 2 * b->prefix->size() + 2 * b->suffix->size() <= 3){
         void* x;
         void* y;
-        if(b->preffix->size() != 0){
-            void* pointer = b->preffix->pop_front();
+        if(b->prefix->size() != 0){
+            void* pointer = b->prefix->pop_front();
             par new_par = *(par*) pointer;
 
             x = new_par.first;
             y = new_par.second;
 
-            a->preffix->push_back(x);
-            a->preffix->push_back(y);
+            a->prefix->push_back(x);
+            a->prefix->push_back(y);
         }
-        if(b->preffix->size() != 0){
+        if(b->prefix->size() != 0){
             void* pointer = b->suffix->pop_front();
             par new_par = *(par*) pointer;
 
             x = new_par.first;
             y = new_par.second;
 
-            a->preffix->push_back(x);
-            a->preffix->push_back(y);
+            a->prefix->push_back(x);
+            a->prefix->push_back(y);
         }
         if(a->suffix->size() != 0){
-            a->preffix->push_back(a->suffix->pop_front());
+            a->prefix->push_back(a->suffix->pop_front());
         }
         b = nullptr;
     }
     else{
-        fix_deques(a->preffix, a->suffix, b->preffix, b->suffix);
-        if(b->preffix->size() == 0 && b->suffix->size() == 0 && last){
+        fix_deques(a->prefix, a->suffix, b->prefix, b->suffix);
+        if(b->prefix->size() == 0 && b->suffix->size() == 0 && last){
             b = nullptr;
         }
     }
@@ -338,7 +338,7 @@ EfficientDeque* push_front(EfficientDeque* a, void* x){
     else{
         b = new EfficientDeque();
     }
-    b->preffix->push_front(x);
+    b->prefix->push_front(x);
     check(b);
     return b;
 }
@@ -358,8 +358,8 @@ EfficientDeque* push_back(EfficientDeque* a, void* x){
 
 EfficientDeque* pop_front(EfficientDeque* a){
     EfficientDeque* b = a->copy();
-    if(b->preffix->size() != 0){
-        b->preffix->pop_front();
+    if(b->prefix->size() != 0){
+        b->prefix->pop_front();
     }
     else{
         b->suffix->pop_front();
@@ -374,7 +374,7 @@ EfficientDeque* pop_back(EfficientDeque* a){
         void *c = b->suffix->pop_back();
     }
     else{
-        void *c = b->preffix->pop_back();
+        void *c = b->prefix->pop_back();
     }
     check(b);
     return b;
@@ -382,8 +382,8 @@ EfficientDeque* pop_back(EfficientDeque* a){
 
 int front(EfficientDeque* a){
     int result;
-    if(a->preffix->size() != 0){
-        result = *(int*) a->preffix->front();
+    if(a->prefix->size() != 0){
+        result = *(int*) a->prefix->front();
     }
     else{
         result = *(int*) a->suffix->front();
@@ -397,7 +397,7 @@ int back(EfficientDeque* a){
         result = *(int*) a->suffix->back();
     }
     else{
-        result = *(int*) a->preffix->back();
+        result = *(int*) a->prefix->back();
     }
     return result;
 }
