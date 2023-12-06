@@ -1,6 +1,5 @@
 #include <iostream>
 #include <stdlib.h>
-#include <string>
 #include <vector>
 
 using namespace std;
@@ -38,7 +37,7 @@ class Node{
         }
 };
 
-class Abb {
+class BST {
     private: 
         Node *root;
 
@@ -132,25 +131,30 @@ class Abb {
         }
         
     public:
-        Abb() {
+        BST() {
             root = nullptr;
         }
-        Abb(Node *u) {
+        BST(Node *u) {
             root = u;
         }
-        ~Abb() {
+        ~BST() {
             delete root;
         }
 
-        Abb *add(int val){
+        BST *add(int val){
             Node *new_root = new Node();
             new_root = put(this->root,val);
-            Abb *new_abb = new Abb(new_root); 
-            return new_abb;
+            BST *new_bst = new BST(new_root); 
+            return new_bst;
         }
 
         void print(){
-            debug_rec(this->root,0);
+            if(root == nullptr){
+                cout << "nullptr" << endl;
+            }
+            else{
+                debug_rec(root,0);
+            }
         }
 
         int print_search(int x){
@@ -159,29 +163,29 @@ class Abb {
 
         int print_min(){
             if(root == nullptr){
-                cout << "ABB vazia!" << endl;
+                cout << "Árvore de Busca Binária vazia!" << endl;
                 return -1;
             }
             return min(this->root);
         }
 
-        Abb *remove(int val){
+        BST *remove(int val){
             Node *new_root = new Node();
             new_root = remove_rec(this->root, val);
             if(new_root == nullptr){
-                Abb *null_treap = new Abb();
-                return null_treap;
+                BST *null_bst = new BST();
+                return null_bst;
             }
-            Abb *new_treap = new Abb(new_root); 
-            return new_treap;
+            BST *new_bst = new BST(new_root); 
+            return new_bst;
         }
         
 };
 
 int main(){
-    vector<Abb*> vector;
+    vector<BST*> vector;
     int numero, t, x;
-    Abb *initial = new Abb();
+    BST *initial = new BST();
     vector.push_back(initial);
 
     while(cin >> numero){
@@ -190,28 +194,53 @@ int main(){
         case 1:
             cin >> t;
             cin >> x;
-            vector.push_back(vector[t]->add(x));
+            if(t > vector.size() - 1){
+                cout << "Não há deque " << t << endl;
+            }
+            else{
+                vector.push_back(vector[t]->add(x));
+            }
             break;
         case 2:
             cin >> t;
             cin >> x;
-            vector.push_back(vector[t]->remove(x));
+            if(t > vector.size() - 1){
+                cout << "Não há deque " << t << endl;
+            }
+            else{
+                vector.push_back(vector[t]->remove(x));
+            }
             break;
         case 3:
             cin >> t;
             cin >> x;
-            cout << vector[t]->print_search(x) << endl;
+            if(t > vector.size() - 1){
+                cout << "Não há deque " << t << endl;
+            }
+            else{
+                cout << vector[t]->print_search(x) << endl;
+            }
             break;
         case 4:
             cin >> t;
-            cout << vector[t]->print_min() << endl;;
+            if(t > vector.size() - 1){
+                cout << "Não há deque " << t << endl;
+            }
+            else{
+                cout << vector[t]->print_min() << endl;;
+            }
             break;
         case 5:
             cin >> t;
-            vector[t]->print();
+            if(t > vector.size() - 1){
+                cout << "Não há deque " << t << endl;
+            }
+            else{
+                vector[t]->print();
+            }
             break;
         case 6:
-            for(int i = 1; i < vector.size(); i++){
+            for(int i = 0; i < vector.size(); i++){
                 cout << "PRINTA A ABB  " << i << ": " << endl;
                 vector[i]->print();
                 cout << endl;
