@@ -1,11 +1,16 @@
+/***************************************************************************************
+ * This implementation is based on Chapter 5 of Yan Couto's Master's thesis.
+ * His thesis can be acessed here:
+ * https://www.teses.usp.br/teses/disponiveis/45/45134/tde-24092019-181655/pt-br.php
+ * 
+ * This implementation was discussed by Kaplan in:
+ * H. Kaplan. Handbook on Data Structures and Applications, chapter 31, Persistent
+ * Data Structures. CRC Press, 2004.
+ ***************************************************************************************/
+
 #include <iostream>
-#include <stdlib.h>
-#include <string>
 #include <vector>
 #include <cstring>
-#include <cmath>
-
-#define DOIS 2.0
 
 using namespace std;
 
@@ -15,14 +20,8 @@ class RecursiveDeque{
     void* prefix;
     RecursiveDeque *center;
     void* sufix;
-    int size;
 
-    RecursiveDeque(){
-        prefix = nullptr;
-        center = nullptr;
-        sufix = nullptr;
-        size = 0;
-    }  
+    int size;
 
     RecursiveDeque(void* p, RecursiveDeque* c,void* s, int si){
         prefix = p;
@@ -37,7 +36,7 @@ struct aux{
     RecursiveDeque* new_deque;
 };
 
-struct par{
+struct peer{
     void* first;
     void* second;
 };
@@ -48,12 +47,11 @@ void* copy_int(const void* src) {
     return new_int;
 }
 
-void* copy_par(const void* src) {
-    void* new_par = malloc(sizeof(par));
-    memcpy(new_par, src, sizeof(par));
-    return new_par;
+void* copy_peer(const void* src) {
+    void* new_peer = malloc(sizeof(peer));
+    memcpy(new_peer, src, sizeof(peer));
+    return new_peer;
 }
-
 
 void* front(RecursiveDeque *d){
     if(d->prefix != nullptr){
@@ -63,14 +61,14 @@ void* front(RecursiveDeque *d){
         return d->sufix;
     }
     else{
-        par resposta = *((par*) front(d->center));
-        return resposta.first;
+        peer answer = *((peer*) front(d->center));
+        return answer.first;
     }
 }
 
 int front_question(RecursiveDeque *d){
     if(d == nullptr){
-        cout << "Deque vazia!!" << endl;
+        cout << "Empty Deque!" << endl;
         return -1;
     }
     int final = *((int*)front(d));
@@ -85,14 +83,14 @@ void* back(RecursiveDeque *d){
         return d->prefix;
     }
     else{
-        par resposta = *((par*) back(d->center));
-        return resposta.second;
+        peer answer = *((peer*) back(d->center));
+        return answer.second;
     }
 }
 
 int back_question(RecursiveDeque *d){
     if(d == nullptr){
-        cout << "Deque vazia!!" << endl;
+        cout << "Empty Deque!" << endl;
         return -1;
     }
     int final = *((int*)back(d));
@@ -107,8 +105,8 @@ RecursiveDeque* push_front(RecursiveDeque *d, void* new_int){
         return new RecursiveDeque(new_int, d->center, d->sufix, d->size + 1);
     }
     else{
-        par new_par = {new_int, d->prefix};
-        return new RecursiveDeque(nullptr, push_front(d->center, copy_par(&new_par)), d->sufix, d->size + 1);
+        peer new_peer = {new_int, d->prefix};
+        return new RecursiveDeque(nullptr, push_front(d->center, copy_peer(&new_peer)), d->sufix, d->size + 1);
     }
 }
 
@@ -120,8 +118,8 @@ RecursiveDeque* push_back(RecursiveDeque *d, void* new_int){
         return new RecursiveDeque(d->prefix, d->center, new_int, d->size + 1);
     }
     else{
-        par new_par = {d->sufix, new_int};
-        return new RecursiveDeque(d->prefix, push_back(d->center, copy_par(&new_par)), nullptr, d->size + 1);
+        peer new_peer = {d->sufix, new_int};
+        return new RecursiveDeque(d->prefix, push_back(d->center, copy_peer(&new_peer)), nullptr, d->size + 1);
     }
 }
 
@@ -139,7 +137,7 @@ aux pop_front_aux(RecursiveDeque *d){
     else{
         aux auxiliar = pop_front_aux(d->center);
 
-        par x = *(par*)auxiliar.i;
+        peer x = *(peer*)auxiliar.i;
 
         RecursiveDeque *new_deque = new RecursiveDeque(x.second, auxiliar.new_deque, d->sufix, d->size - 1); 
 
@@ -149,7 +147,7 @@ aux pop_front_aux(RecursiveDeque *d){
 
 RecursiveDeque* pop_front(RecursiveDeque *d){
     if(d == nullptr){
-        cout << "Não é possível usar a operação PopFront em uma deque vazia" << endl;
+        cout << "Empty Deque" << endl;
         return nullptr;
     }
     return pop_front_aux(d).new_deque;
@@ -169,7 +167,7 @@ aux pop_back_aux(RecursiveDeque *d){
     else{
         aux auxiliar = pop_back_aux(d->center);
 
-        par x = *(par*)auxiliar.i;
+        peer x = *(peer*)auxiliar.i;
 
         RecursiveDeque *new_deque = new RecursiveDeque(d->prefix, auxiliar.new_deque, x.first, d->size - 1); 
 
@@ -179,7 +177,7 @@ aux pop_back_aux(RecursiveDeque *d){
 
 RecursiveDeque* pop_back(RecursiveDeque *d){
     if(d == nullptr){
-        cout << "Não é possível usar a operação PopFront em uma deque vazia" << endl;
+        cout << "Empty Deque" << endl;
         return nullptr;
     }
     return pop_back_aux(d).new_deque;
@@ -192,12 +190,13 @@ void* k_th(RecursiveDeque *d, int k){
     if(k == d->size && d->sufix != nullptr){
         return d->sufix;
     }
+    
     int index = k;
     if(d->prefix != nullptr){
         index = k - 1;
     }
     
-    par aux = *(par*)k_th(d->center, (index+1)/2);
+    peer aux = *(peer*)k_th(d->center, (index+1)/2);
 
     if(index % 2 != 0){
         return aux.first;
@@ -209,7 +208,7 @@ void* k_th(RecursiveDeque *d, int k){
 
 int k_th_question(RecursiveDeque *d, int k){
     if(k > d->size){
-        cout << "Esta deque não possui " << k << " elementos!" << endl;
+        cout << "This Deque doesn't have " << k << " elements!" << endl;
         return -1;
     }
     return *(int*)k_th(d,k);
@@ -217,7 +216,7 @@ int k_th_question(RecursiveDeque *d, int k){
 
 void print(RecursiveDeque *d){
     if(d == nullptr){
-        cout << "Deque vazia!" << endl;
+        cout << "Empty Deque!" << endl;
         return;
     }
     int k = d->size;
@@ -228,26 +227,23 @@ void print(RecursiveDeque *d){
     cout << endl;
 }
 
-void print_instructions(){
-    cout << "Codificação das operações:" << endl;
-    cout << " 1 <t> <x> significa d_ultima+1 = push_front(d_t, x)" << endl;
-    cout << " 2 <t> <x> significa d_ultima+1 = push_back(d_t, x)" << endl;
-    cout << " 3 <t>     significa d_ultima+1 = pop_front(d_t)" << endl;
-    cout << " 4 <t>     significa d_ultima+1 = pop_back(d_t)" << endl;
-    cout << " 5 <t>     significa println(front(d_t))" << endl;
-    cout << " 6 <t>     significa println(back(d_t))" << endl;
-    cout << " 7 <t> <k> significa println(k_th(d_t, k))" << endl;
-    cout << " 8 <t>     significa print(d_t)" << endl;
-    cout << " 9         significa print_all()" << endl;
-    cout << "10         significa print_instructions" << endl;
-    cout << endl;
+void instructions(){
+    cout << "0         means instructions()" << endl;
+    cout << "1 <t> <x> means pushFront(t, x)" << endl;
+    cout << "2 <t> <x> means pushBack(t, x)" << endl;
+    cout << "3 <t>     means popFront(t)" << endl;
+    cout << "4 <t>     means popBack(t)" << endl;
+    cout << "5 <t>     means front(t)" << endl;
+    cout << "6 <t>     means back(t)" << endl;
+    cout << "7 <t> <x> means kth(t, x)" << endl;
+    cout << "8 <t>     means print(t)" << endl;
+    cout << "9         means printAll()" << endl;
 }
 
-
 int main() {
-    print_instructions();
     vector<RecursiveDeque*> vector;
     vector.push_back(nullptr);
+    instructions();
 
     bool continuar = true;
 
@@ -255,6 +251,9 @@ int main() {
     while(continuar && cin >> n){
         switch (n)
         {
+        case 0:
+            instructions();
+            break;
         case 1:
             int a;
             cin >> t;
@@ -297,11 +296,7 @@ int main() {
                 print(vector[i]);
             }
             break;
-        case 10:
-            print_instructions();
-            break;
         }
     }
-
     return 0;
 }

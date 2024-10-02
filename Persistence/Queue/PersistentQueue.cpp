@@ -1,6 +1,11 @@
+/***************************************************************************************
+ * This implementation is based on Chapter 3 of Yan Couto's Master's thesis.
+ * His thesis can be acessed here:
+ * https://www.teses.usp.br/teses/disponiveis/45/45134/tde-24092019-181655/pt-br.php
+ ***************************************************************************************/
+
 #include <iostream>
-#include <stdlib.h>
-#include <string>
+#include <vector>   
 
 using namespace std;
 
@@ -8,11 +13,6 @@ class Node {
 public:
     int data;
     Node* next;
-
-    Node(int value) {
-        this->data = value;
-        next = nullptr;
-    }
 
     Node(int value, Node* next) {
         this->data = value;
@@ -51,9 +51,6 @@ public:
     }
 
     void DeleteNode(){
-        //Essa função foi criada para tratar do vazamento de memória.
-        //Ela deve ser chamada ao fim da execução em todas as "cabeças" de filas diferentes.
-        //Depois dessa chamada, apenas use delete p* em todas as filas.
         delete root;
     }
 
@@ -65,7 +62,7 @@ public:
 
     PersistentQueue* Pop() {
         if (this->root == nullptr || this->size == 0) {
-            cout << "Erro, não é possível executar o Pop em filas vazias!" << endl;
+            cout << "Empty Queue!" << endl;
             PersistentQueue* placeHolder = new PersistentQueue();
             return placeHolder;
         }
@@ -78,43 +75,43 @@ public:
     }
 
     int First() {
-        return K_TH(this->size - 1);
+        return k_th(this->size - 1);
     }
 
-    int Top() {
+    int Last() {
         if (this->size == 0) {
-            cout << "Não é possível fazer um top de uma fila vazia!" << endl;
+            cout << "Empty Queue" << endl;
             return -1;
         }
         return this->root->data;
     }
 
-    int K_TH(int index) {
+    int k_th(int index) {
         int i = 0;
         Node* newNode = this->root;
         while (i != index) {
             if (newNode == nullptr) {
-                cout << "Não há " << index << " itens na fila escolhida!" << endl;
+                cout << "This queue doesn't have " << index << " elements!" << endl;
                 return -1;
             }
             newNode = newNode->next;
             i++;
         }
         if (newNode == nullptr) {
-            cout << "Não há " << index << " itens na fila escolhida!" << endl;
+            cout << "This queue doesn't have " << index << " elements!" << endl;
             return -1;
         }
         return newNode->data;
     }
 
-    void Print_All() {
+    void Print() {
         int i = this->size;
         Node* newNode = this->root;
         if (i == 0) {
-            cout << "itens da fila = nullptr" << endl;
+            cout << "= nullptr" << endl;
             return;
         }
-        cout << "itens da fila = ";
+        cout << "= ";
         while (i > 0) {
             cout << " " << newNode->data;
             newNode = newNode->next;
@@ -124,42 +121,86 @@ public:
     }
 };
 
-int main() {
-    PersistentQueue* p0 = new PersistentQueue();
+void instructions(){
+    cout << "0         means instructions()" << endl;
+    cout << "1 <t> <x> means queue(t, x)" << endl;
+    cout << "2 <t>     means dequeue(t)" << endl;
+    cout << "3 <t>     means size(t)" << endl;
+    cout << "4 <t>     means first(t)" << endl;
+    cout << "5 <t>     means last(t)" << endl;
+    cout << "6 <t>     means kth(t)" << endl;
+    cout << "7         means print()" << endl;
+    cout << "8         means printAll()" << endl;
+}
 
-    PersistentQueue* p1 = p0->Push(2);
-    PersistentQueue* p2 = p1->Push(3);
+int main(){
+    vector<PersistentQueue*> vector;
+    int instruction, t, x;
+    vector.push_back(new PersistentQueue());
+    instructions();
 
-    PersistentQueue* p3 = p2->Push(12);
-    PersistentQueue* p4 = p3->Pop();
-    PersistentQueue* p5 = p4->Pop();
-    PersistentQueue* p6 = p5->Pop();
-
-    p0->Print_All();
-    p1->Print_All();
-    p2->Print_All();
-    p3->Print_All();
-    p4->Print_All();
-    p5->Print_All();
-    p6->Print_All();
-    cout << endl;
-
-    cout << "p4->size == " << p4->Size() << endl;
-    cout << "p0->top == " << p0->Top() << endl;
-    cout << "p2->kth(4) == " << p2->K_TH(4) << endl;
-
-    cout << "p3->first() == " << p3->First() << endl;
-    cout << "p4->first() == " << p4->First() << endl;
-
-    p3->DeleteNode();
-    delete p0;
-    delete p1;
-    delete p2;
-    delete p3;
-    delete p4;
-    delete p5;
-    delete p6;
-    
-
-    return 0;
+    while(cin >> instruction){
+        switch (instruction)
+        {
+        case 0:
+            instructions();
+            break;
+        case 1:
+            cin >> t;
+            cin >> x;
+            vector.push_back(vector[t]->Push(x));
+            break;
+        case 2:
+            cin >> t;
+            vector.push_back(vector[t]->Pop());
+            break;
+        case 3:
+            cin >> t;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Queue " << t << endl;
+            }
+            else{
+                cout << vector[t]->Size() << endl;
+            }
+            break;
+        case 4:
+            cin >> t;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Queue " << t << endl;
+            }
+            else{
+                cout << vector[t]->First() << endl;
+            }
+            break;
+        case 5:
+            cin >> t;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Queue " << t << endl;
+            }
+            else{
+                cout << vector[t]->Last() << endl;
+            }
+            break;
+        case 6:
+            cin >> t;
+            cin >> x;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Queue " << t << endl;
+            }
+            else{
+                cout << vector[t]->k_th(x) << endl;
+            }
+            break;
+        case 7:
+            cin >> t;
+            vector[t]->Print();
+            break;
+        case 8:
+            for(int i = 0; i < vector.size(); i++){
+                cout << "Queue " << i << " ";
+                vector[i]->Print();
+            }
+            break;
+        }
+    }
 }

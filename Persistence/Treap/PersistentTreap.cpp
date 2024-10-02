@@ -1,205 +1,209 @@
+/***************************************************************************************
+ * This implementation is based on the lecture notes by Cristina Gomes Fernandes,   
+ * titled "Persistent Data Structures", from the Advanced Data Structures course, 2023.
+ * The link to this course is:
+ * https://www.ime.usp.br/~cris/aulas/23_2_6957/
+ ***************************************************************************************/
+
 #include <iostream>
-#include <cstdlib>
-#include <string>
 #include <vector>
 
 using namespace std;
 
-class NodeTR{
+class Node{
     public:
-        int val;
-        NodeTR *esq;
-        NodeTR *dir;
+        int key;
         int priority;
 
-        NodeTR() { 
-            esq = nullptr;
-            dir = nullptr;
+        Node *left;
+        Node *right;
+
+        Node() { 
+            left = nullptr;
+            right = nullptr;
             priority = 0;
         }
 
-        NodeTR(int val){
-            esq = nullptr;
-            dir = nullptr;
+        Node(int key){
+            left = nullptr;
+            right = nullptr;
             priority = rand() % 1000;
-            this->val = val;
+            this->key = key;
         }
 
-        ~NodeTR(){
-            if(esq != nullptr){
-                delete esq;
+        ~Node(){
+            if(left != nullptr){
+                delete left;
             }
-            if(dir != nullptr){
-                delete dir;
+            if(right != nullptr){
+                delete right;
             }
         }
         
-        NodeTR *copy(){
-            NodeTR *new_node = new NodeTR();
-            new_node->esq = this->esq;
-            new_node->dir = this->dir;
+        Node *copy(){
+            Node *new_node = new Node();
+            new_node->left = this->left;
+            new_node->right = this->right;
             new_node->priority = this->priority;
-            new_node->val = this->val;
+            new_node->key = this->key;
             return new_node;
         }
 };
 
 class PersistentTreap {
     private: 
-        NodeTR *raiz;
+        Node *root;
 
-        NodeTR* right_rotation(NodeTR *node){
-            NodeTR *new_root = node->esq;
-            NodeTR *son = new_root->dir;
+        Node* right_rotation(Node *node){
+            Node *new_root = node->left;
+            Node *son = new_root->right;
 
-            new_root->dir = node;
-            node->esq = son;
-
-            return new_root;
-        }
-
-        NodeTR* left_rotation(NodeTR *node){
-            NodeTR *new_root = node->dir;
-            NodeTR *son = new_root->esq;
-
-            new_root->esq = node;
-            node->dir = son;
+            new_root->right = node;
+            node->left = son;
 
             return new_root;
         }
 
-        NodeTR* put(NodeTR *node,int val){
+        Node* left_rotation(Node *node){
+            Node *new_root = node->right;
+            Node *son = new_root->left;
+
+            new_root->left = node;
+            node->right = son;
+
+            return new_root;
+        }
+
+        Node* put(Node *node,int key){
             if(node == nullptr){
-                NodeTR *insert = new NodeTR(val); 
+                Node *insert = new Node(key); 
                 return insert;
             }
-            NodeTR *new_node = node->copy();
-            //nao faz tratamento de chaves iguais!
-            if(new_node->val > val){ //vai pra esquerda!
-                new_node->esq = put(new_node->esq,val);
-                if (new_node->esq->priority > new_node->priority){
+            Node *new_node = node->copy();
+            if(new_node->key > key){
+                new_node->left = put(new_node->left,key);
+                if (new_node->left->priority > new_node->priority){
                     new_node = right_rotation(new_node);
                 }
             } 
-            else{ //vai pra direita!!
-                new_node->dir = put(new_node->dir,val);
-                if (new_node->dir->priority > new_node->priority){
+            else{
+                new_node->right = put(new_node->right,key);
+                if (new_node->right->priority > new_node->priority){
                     new_node = left_rotation(new_node);
                 }
             }
             return new_node;
         }
 
-        NodeTR* remove_rec(NodeTR *node,int val, int copy){
+        Node* remove_rec(Node *node,int key, int copy){
             if(node == nullptr){
                 return nullptr;
             }
-            if(node->val == val){
-                //tratamento de deleção;
-                if(node->dir == nullptr){
-                    return node->esq;
+            if(node->key == key){
+                if(node->right == nullptr){
+                    return node->left;
                 }
-                else if(node->esq == nullptr){
-                    return node->dir;
+                else if(node->left == nullptr){
+                    return node->right;
                 }
 
-                NodeTR *current_node = node;
+                Node *current_node = node;
                 if(copy == 0){
-                    NodeTR *new_node = node->copy();
+                    Node *new_node = node->copy();
                     current_node = new_node;
                 }
 
-                if(current_node->dir->priority > current_node->esq->priority){ // direita sobe
-                    current_node->dir = current_node->dir->copy();
-                    NodeTR *aux_node = left_rotation(current_node);
-                    aux_node->esq = remove_rec(aux_node->esq, val,1);
+                if(current_node->right->priority > current_node->left->priority){
+                    current_node->right = current_node->right->copy();
+                    Node *aux_node = left_rotation(current_node);
+                    aux_node->left = remove_rec(aux_node->left, key,1);
                     return aux_node;
                 }
                 else{
-                    current_node->esq = current_node->esq->copy();
-                    NodeTR *aux_node = right_rotation(current_node);
-                    aux_node->dir = remove_rec(aux_node->dir, val,1);
+                    current_node->left = current_node->left->copy();
+                    Node *aux_node = right_rotation(current_node);
+                    aux_node->right = remove_rec(aux_node->right, key,1);
                     return aux_node;
                 }
             }
-            NodeTR *new_node = node->copy();
-            if(new_node->val > val){ //vá pra esquerda!
-                new_node->esq = remove_rec(new_node->esq, val,0);
+            Node *new_node = node->copy();
+            if(new_node->key > key){
+                new_node->left = remove_rec(new_node->left, key,0);
                 return new_node;
             }
-            else{ //vá pra direita!
-                new_node->dir = remove_rec(new_node->dir, val,0);
+            else{
+                new_node->right = remove_rec(new_node->right, key,0);
                 return new_node;
             }
         }
 
-        void debug_rec(NodeTR *u, int i){
-            if(u->esq != nullptr){
-                debug_rec(u->esq, i+3);
+        void debug_rec(Node *u, int i){
+            if(u->left != nullptr){
+                debug_rec(u->left, i+3);
             }
 
             for(int j=0;j<i;j++){
                 cout << " ";
             }
-            cout << u->val << " " << u->priority;
+            cout << u->key << " " << u->priority;
             cout << endl;
 
-            if(u->dir != nullptr){
-                debug_rec(u->dir, i+3);
+            if(u->right != nullptr){
+                debug_rec(u->right, i+3);
             }
             
         } 
 
-        int min(NodeTR *u){
-            if(u->esq == nullptr){
-                return u->val;
+        int min(Node *u){
+            if(u->left == nullptr){
+                return u->key;
             }
-            return min(u->esq);
+            return min(u->left);
         }
 
-        bool search(NodeTR *u, int x){
+        bool search(Node *u, int x){
             if(u == nullptr){
                 return false;
             }
-            if(u->val == x){
+            if(u->key == x){
                 return true;
             }
-            else if(u->val > x){
-                return search(u->esq,x);
+            else if(u->key > x){
+                return search(u->left,x);
             }
             else{
-                return search(u->dir,x);
+                return search(u->right,x);
             }
         }
 
     public:
         PersistentTreap() {
-            raiz = nullptr;
+            root = nullptr;
         }
-        PersistentTreap(NodeTR *root) {
-            raiz = root;
+        PersistentTreap(Node *root) {
+            root = root;
         }
         ~PersistentTreap() {
-            delete raiz;
+            delete root;
         }
 
         bool is_null(){
-            if(raiz == nullptr){
+            if(root == nullptr){
                 return true;
             }
             return false;
         }
 
-        PersistentTreap *add(int val){
-            NodeTR *new_root = new NodeTR();
-            new_root = put(this->raiz,val);
+        PersistentTreap *add(int key){
+            Node *new_root = new Node();
+            new_root = put(this->root,key);
             PersistentTreap *new_treap = new PersistentTreap(new_root); 
             return new_treap;
         }
 
-        PersistentTreap *remove(int val){
-            NodeTR *new_root = new NodeTR();
-            new_root = remove_rec(this->raiz, val,0);
+        PersistentTreap *remove(int key){
+            Node *new_root = new Node();
+            new_root = remove_rec(this->root, key,0);
             if(new_root == nullptr){
                 PersistentTreap *null_treap = new PersistentTreap();
                 return null_treap;
@@ -209,21 +213,36 @@ class PersistentTreap {
         }
 
         void print(){
-            debug_rec(this->raiz,0);
+            if(!is_null()){
+                debug_rec(this->root,0);
+            }
+            else{
+                cout << "Empty treap!" << endl;
+            }
         }
 
         int print_min(){
-            if(raiz == nullptr){
-                cout << "PersistentTreap vazia!" << endl;
+            if(root == nullptr){
+                cout << "Empty treap!" << endl;
                 return -1;
             }
-            return min(this->raiz);
+            return min(this->root);
         }
 
         int print_search(int x){
-            return (search(this->raiz, x)? 1 : 0);
+            return (search(this->root, x)? 1 : 0);
         }
 };
+
+void instructions(){
+    cout << "0         means instructions" << endl;
+    cout << "1 <t> <x> means add(t, x)" << endl;
+    cout << "2 <t> <x> means remove(t, x)" << endl;
+    cout << "3 <t> <x> means println(search(t, x)? 1 : 0)" << endl;
+    cout << "4 <t>     means println(min(t))" << endl;
+    cout << "5 <t>     means print(t)" << endl;
+    cout << "6         means printAll()" << endl;
+}
 
 int main(){
     srand(time(0));
@@ -231,10 +250,14 @@ int main(){
     int numero, t, x;
     PersistentTreap *initial = new PersistentTreap();
     vector.push_back(initial);
+    instructions();
 
     while(cin >> numero){
         switch (numero)
         {
+        case 0:
+            instructions();
+            break;
         case 1:
             cin >> t;
             cin >> x;
@@ -256,20 +279,30 @@ int main(){
             break;
         case 5:
             cin >> t;
-            vector[t]->print();
+            if(t < 0 || vector.size() < t){
+                cout << "invalid treap!" << endl;
+            }
+            else{
+                vector[t]->print();
+            }
             break;
         case 6:
+            cout << "--------------------------" << endl;
             for(int i = 0; i < vector.size(); i++){
-                cout << "PRINTA A TREAP  " << i << ": " << endl;
+                cout << "PRINT TREAP  " << i << ": " << endl;
                 if(vector[i]->is_null()){
-                    cout << "Treap " << i << " é uma treap nula!" << endl;
+                    cout << "Treap " << i << " is Empty!" << endl;
                 }
                 else{
                     vector[i]->print();
                 }
-                cout << endl;
+                if(i < vector.size() - 1){
+                    cout << endl;
+                }
+                else{
+                    cout << "--------------------------" << endl;
+                }
             }
-            cout << "--------------------------" << endl;
             break;
         }
     }

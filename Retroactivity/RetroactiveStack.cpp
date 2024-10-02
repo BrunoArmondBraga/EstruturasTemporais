@@ -1,35 +1,32 @@
+/***************************************************************************************
+ * This implementation is based on Beatriz Marouelli's undergraduate thesis.
+ * Her work can be seen here:
+ * https://bccdev.ime.usp.br/tccs/2019/bfm/
+ ***************************************************************************************/
+
 #include <iostream>
-#include <stdlib.h>
-#include <string>
-#include <vector>
 
 using namespace std;
 
 class Node{
     private:        
     public:
-
-        int max; //maior chave entre as chaves menores. max pai = max do filho direito.
+        int max;
         int sum;
         int smax;
         int priority;
 
-        Node *esq;
-        Node *dir;
+        Node *left;
+        Node *right;
 
         bool is_leaf;
         int time;
         int val;
         bool is_push;
 
-        Node() { 
-            esq = nullptr;
-            dir = nullptr;
-        }
-
         Node(int t, int key, bool pp){
-            esq = nullptr;
-            dir = nullptr;
+            left = nullptr;
+            right = nullptr;
             val = key;
             time = t;
             is_leaf = true;
@@ -47,8 +44,8 @@ class Node{
         }
 
         Node(Node *e, Node *d){
-            esq = e;
-            dir = d;
+            left = e;
+            right = d;
             is_leaf = false;
 
             priority = rand() % 1000;
@@ -56,11 +53,11 @@ class Node{
         }
 
         ~Node() {
-            if(esq != nullptr){
-                delete esq;
+            if(left != nullptr){
+                delete left;
             }
-            if(dir != nullptr){
-                delete dir;
+            if(right != nullptr){
+                delete right;
             }
         }
 
@@ -75,9 +72,9 @@ class Node{
             if(this->is_leaf){
                 return;
             }
-            this->max = this->dir->max;
-            this->sum = this->dir->sum + this->esq->sum;
-            this->smax = maxim(this->dir->smax, this->dir->sum + this->esq->smax);
+            this->max = this->right->max;
+            this->sum = this->right->sum + this->left->sum;
+            this->smax = maxim(this->right->smax, this->right->sum + this->left->smax);
         }  
 };
 
@@ -92,11 +89,11 @@ class RetroactiveStack {
         Node *root;
 
         Node* right_rotation(Node *node){
-            Node *new_root = node->esq;
-            Node *son = new_root->dir;
+            Node *new_root = node->left;
+            Node *son = new_root->right;
 
-            new_root->dir = node;
-            node->esq = son;
+            new_root->right = node;
+            node->left = son;
 
             node->Update();
             new_root->Update();
@@ -105,11 +102,11 @@ class RetroactiveStack {
         }
 
         Node* left_rotation(Node *node){
-            Node *new_root = node->dir;
-            Node *son = new_root->esq;
+            Node *new_root = node->right;
+            Node *son = new_root->left;
 
-            new_root->esq = node;
-            node->dir = son;
+            new_root->left = node;
+            node->right = son;
 
             node->Update();
             new_root->Update();
@@ -131,15 +128,15 @@ class RetroactiveStack {
                 return new_root;
             }
 
-            if(node->esq->max > t){ //vai pra esquerda!
-                node->esq = put(node->esq, t, item, is_push);
-                if (node->esq->priority > node->priority){
+            if(node->left->max > t){ //go left!
+                node->left = put(node->left, t, item, is_push);
+                if (node->left->priority > node->priority){
                     node = right_rotation(node);
                 }
             } 
-            else{ //vai pra direita!!
-                node->dir = put(node->dir, t, item, is_push);
-                if (node->dir->priority > node->priority){
+            else{ //go right!
+                node->right = put(node->right, t, item, is_push);
+                if (node->right->priority > node->priority){
                     node = left_rotation(node);
                 }
             }
@@ -148,37 +145,39 @@ class RetroactiveStack {
         }
 
         Node* delete_operation(Node* node, int t){
-            if(node->esq->max >= t){ //vai pra esquerda!
-                if(node->esq->is_leaf){ //chegando na última chamada!
-                    if(node->esq->time == t){
-                        node->dir->Update();
-                        return node->dir;
+            if(node->left->max >= t){ //go left!
+                if(node->left->is_leaf){ //last call!
+                    if(node->left->time == t){
+                        node->right->Update();
+                        return node->right;
                     }
-                    cout << "não achamos uma operação no tempo t = " << t << endl;
+                    //no operation on time t found!
+                    cout << "no operation on time t = " << t << endl;
                     node->Update();
                     return node;
                 }
-                node->esq = delete_operation(node->esq, t);
+                node->left = delete_operation(node->left, t);
             } 
-            else{ //vai pra direita!!
-                if(node->dir->is_leaf){ //chegando na última chamada!
-                    if(node->dir->time == t){
-                        node->esq->Update();
-                        return node->esq;
+            else{ //go right!
+                if(node->right->is_leaf){ //last call!
+                    if(node->right->time == t){
+                        node->left->Update();
+                        return node->left;
                     }
-                    cout << "não achamos uma operação no tempo t = " << t << endl;
+                    //no operation on time t found!
+                    cout << "no operation on time t = " << t << endl;
                     node->Update();
                     return node;
                 }
-                node->dir = delete_operation(node->dir, t);
+                node->right = delete_operation(node->right, t);
             }
             node->Update();
             return node;
         }
 
         void debug_rec(Node *u, int i){
-            if(u->dir != nullptr){
-                debug_rec(u->dir, i+3);
+            if(u->right != nullptr){
+                debug_rec(u->right, i+3);
             }
 
             for(int j=0;j<i;j++){
@@ -190,13 +189,11 @@ class RetroactiveStack {
             else{
                 cout << "max=" << u->max << "sum=" << u->sum;
                 cout << "smax=" << u->smax;
-                // << u->priority;
-                //cout << "-";
             }
             cout << endl;
 
-            if(u->esq != nullptr){
-                debug_rec(u->esq, i+3);
+            if(u->left != nullptr){
+                debug_rec(u->left, i+3);
             }
         } 
 
@@ -210,11 +207,11 @@ class RetroactiveStack {
                 }
                 return sum;
             }
-            if(node->esq->max >= t){ //vai pra esquerda!
-                return search_size(node->esq, t, sum);
+            if(node->left->max >= t){
+                return search_size(node->left, t, sum);
             }
             else {
-                return search_size(node->dir, t, sum + node->esq->sum);
+                return search_size(node->right, t, sum + node->left->sum);
             }
         }
 
@@ -222,10 +219,10 @@ class RetroactiveStack {
             if(k == 1 && node->is_leaf){
                 return node->val;
             }
-            if(node->dir->smax >= k){
-                return find_push(node->dir, k);
+            if(node->right->smax >= k){
+                return find_push(node->right, k);
             }
-            return find_push(node->esq, k - node->dir->sum);
+            return find_push(node->left, k - node->right->sum);
         }
 
         struct_kth search_kth(Node *node, int t, struct_kth s_kth){
@@ -244,21 +241,21 @@ class RetroactiveStack {
                 return s_kth;
             }
             bool went_left = false;
-            if(node->esq->max >= t){ //vai pra esquerda!
+            if(node->left->max >= t){
                 went_left = true;
-                s_kth = search_kth(node->esq, t, s_kth);
+                s_kth = search_kth(node->left, t, s_kth);
             } 
-            else{ //vai pra direita!!
-                s_kth = search_kth(node->dir, t, s_kth);
+            else{
+                s_kth = search_kth(node->right, t, s_kth);
             }
             if(s_kth.found != nullptr || went_left){
                 return s_kth;
             }
-            if(node->esq->smax >= s_kth.k){
-                return struct_kth{s_kth.k, this->find_push(node->esq,s_kth.k), node};
+            if(node->left->smax >= s_kth.k){
+                return struct_kth{s_kth.k, this->find_push(node->left,s_kth.k), node};
             }
             else{
-                return struct_kth{s_kth.k - node->esq->sum, -1, nullptr};
+                return struct_kth{s_kth.k - node->left->sum, -1, nullptr};
             }
         }
 
@@ -276,10 +273,10 @@ class RetroactiveStack {
         void insert(int t, bool is_push, int item){
             if(root == nullptr){
                 if(is_push == false){
-                    cout << "impossivel fazer pop em uma pilha retroativa vazia" << endl;
+                    cout << "impossible to perform a pop on an empty retroactive stack" << endl;
                     return;
                 }
-                //caso pilha retroativa sem push or pops
+                //case retroactivestack without pushs and pops
                 Node *new_root = new Node(t, item, is_push);
                 root = new_root;
                 return;
@@ -289,7 +286,7 @@ class RetroactiveStack {
 
         void remove(int t){
             if(root == nullptr){
-                cout << "impossível retirar operações em pilha retroativa vazia" << endl;
+                cout << "impossible to remove operations on an empty retroactive stack" << endl;
                 return;
             }
             if(this->root->is_leaf){
@@ -297,16 +294,6 @@ class RetroactiveStack {
                 return;
             }
             root = delete_operation(this->root, t);
-        }
-
-        void print_test(){
-            if(this->root == nullptr){
-                cout << "pilha retroativa vazia!" << endl;
-                return;
-            }
-            cout << "--------------" << endl;
-            debug_rec(this->root,0);
-            cout << "--------------" << endl;
         }
 
         void print(int t){
@@ -323,8 +310,8 @@ class RetroactiveStack {
 
         int kth(int t, int k){
             int total = this->size(t);
-            if(total < k){ //tratamento de impossiveis!
-                cout << "kth(" << k << ")" << " impossível porque a pilha no tempo " << t << " so possui " << total << " elementos!" << endl;
+            if(total < k){ 
+                cout << "kth(" << k << ")" << " impossible because the stack on time " << t << " only has " << total << " elements!" << endl;
                 return -1;
             }
             struct_kth first = {k, -1, nullptr};
@@ -332,15 +319,29 @@ class RetroactiveStack {
         }
 };
 
-int main(){
-    //srand(time(0));
-    srand(1211);
-    int numero, t, x;
-    RetroactiveStack *stack = new RetroactiveStack();
+void instructions(){
+    cout << "0         means instructions()" << endl;
+    cout << "1 <t> <x> means insert(t, Push, x)" << endl;
+    cout << "2 <t>     means insert(t, Pop)" << endl;
+    cout << "3 <t>     means delete(t)" << endl;
+    cout << "4 <t>     means print(size(t))" << endl;
+    cout << "5 <t>     means print(top(t))" << endl;
+    cout << "6 <t> <k> means print(kth(t, k))" << endl;
+    cout << "7 <t>     means print(t)" << endl;
+}
 
-    while(cin >> numero){
-        switch (numero)
+int main(){
+    srand(time(0));
+    int instruction, t, x;
+    RetroactiveStack *stack = new RetroactiveStack();
+    instructions();
+
+    while(cin >> instruction){
+        switch (instruction)
         {
+        case 0:
+            instructions();
+            break;
         case 1:
             cin >> t;
             cin >> x;
@@ -370,9 +371,6 @@ int main(){
         case 7:
             cin >> t;
             stack->print(t);
-            break;
-        case 8:
-            stack->print_test();
             break;
         }
     }

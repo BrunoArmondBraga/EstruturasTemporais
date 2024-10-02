@@ -1,7 +1,12 @@
+/***************************************************************************************
+ * This implementation is based on Chapter 3 of Yan Couto's Master's thesis.
+ * His thesis can be acessed here:
+ * https://www.teses.usp.br/teses/disponiveis/45/45134/tde-24092019-181655/pt-br.php
+ ***************************************************************************************/
+
 #include <iostream>
-#include <stdlib.h>
-#include <string>
 #include <cmath>
+#include <vector>
 
 using namespace std;
 
@@ -73,14 +78,14 @@ private:
         Node* newNode = this->root;
         while (i != k) {
             if (newNode == nullptr) {
-                cout << "Não há " << k+1 << " itens na pilha escolhida!" << endl;
+                cout << "There aren't " << k+1 << " itens in this stack!" << endl;
                 return -1;
             }
             newNode = newNode->next;
             i++;
         }
         if (newNode == nullptr) {
-            cout << "Não há " << k+1 << " itens na pilha escolhida!" << endl;
+            cout << "There aren't " << k+1 << " itens in this stack!" << endl;
             return -1;
         }
         return newNode->data;
@@ -89,11 +94,11 @@ private:
     int level_ancestor_binary(int k){
         Node *u = this->root;
         if(k < 0){
-            cout << "index inválido para função kth!" << endl;
+            cout << "invalid index!" << endl;
         }
         else if (k+1 > this->number_of_elements)
         {
-            cout << "Não há " << k+1 << " itens na pilha escolhida!" << endl;
+            cout << "There aren't " << k+1 << " itens in this stack!" << endl;
             return -1;
         }
         double result = log2(k);
@@ -114,7 +119,7 @@ private:
     int level_ancestor_skew_binary(int k){
         if (k+1 > this->number_of_elements)
         {
-            cout << "Não há " << k+1 << " itens na pilha escolhida!" << endl;
+            cout << "There aren't " << k+1 << " itens in this stack!" << endl;
             return -1;
         }
         Node *u = this->root;
@@ -167,7 +172,7 @@ public:
     {
         if (this->root == nullptr)
         {
-            cout << "Erro, não é possível executar o Pop em pilhas vazias!" << endl;
+            cout << "Empty Stack!" << endl;
             PersistentStack *placeholder = new PersistentStack();
             return placeholder;
         }
@@ -184,7 +189,7 @@ public:
     {
         if (this->number_of_elements == 0)
         {
-            cout << "Não é possível fazer um top de uma pilha vazia!" << endl;
+            cout << "Empty Stack!" << endl;
             return -1;
         }
         return this->root->data;
@@ -193,7 +198,7 @@ public:
     int kth(int k, int mode)
     {
         if(k < 1){
-            cout << "kth(" << k << ") com k inválido!" << endl;
+            cout << "kth(" << k << ") with invalid k!" << endl;
             return -1;
         }
         if(mode == 1){
@@ -212,10 +217,10 @@ public:
         Node *newNode = this->root;
         if (newNode == nullptr)
         {
-            cout << "itens da pilha = nullptr" << endl;
+            cout << "= nullptr" << endl;
             return;
         }
-        cout << "itens da pilha = " << newNode->data;
+        cout << "= " << newNode->data;
         newNode = newNode->next;
         while (newNode != nullptr)
         {
@@ -226,53 +231,98 @@ public:
     }
 };
 
-int main()
-{
-    PersistentStack *p0 = new PersistentStack();
-    PersistentStack *p1 = p0->push(5);
-    PersistentStack *p2 = p1->push(7);
-    PersistentStack *p3 = p2->push(6);
-    PersistentStack *p4 = p2->pop();
-    PersistentStack *p5 = p4->push(9);
-    PersistentStack *p6 = p0->push(5);
+void instructions(){
+    cout << "0         means instructions()" << endl;
+    cout << "1 <t> <x> means push(t, x)" << endl;
+    cout << "2 <t>     means pop(t)" << endl;
+    cout << "3 <t>     means size(t)" << endl;
+    cout << "4 <t>     means top(t)" << endl;
+    cout << "5 <t> <x> means kth(t,x) using linear level ancestor" << endl;
+    cout << "6 <t> <x> means kth(t,x) using binary level ancestor" << endl;
+    cout << "7 <t> <x> means kth(t,x) using jump pointers" << endl;
+    cout << "8 <t>     means print(t)" << endl;
+    cout << "9         means printAll()" << endl;
+}
 
-    cout << "As pilhas possuem os seguintes elementos:" << endl;
-    p0->printAll();
-    p1->printAll();
-    p2->printAll();
-    p3->printAll();
-    p4->printAll();
-    p5->printAll();
-    p6->printAll();
-    cout << endl;
+int main(){
+    vector<PersistentStack*> vector;
+    int instruction, t, x;
+    vector.push_back(new PersistentStack());
+    instructions();
 
-    /* cout << "O tamanho das pilhas são:" << endl;
-    cout << p0->size() << endl;
-    cout << p1->size() << endl;
-    cout << p2->size() << endl;
-    cout << p3->size() << endl;
-    cout << p4->size() << endl;
-    cout << p5->size() << endl;
-    cout << p6->size() << endl;
-    cout << endl; */
-
-    cout << "O top da pilha p3 é = " << p3->top() << endl;
-    cout << "O top da pilha p4 é = " << p4->top() << endl;
-    cout << endl;
-
-
-    cout << "O KTH(-1) da pilha p3 é = " << p3->kth(-1,1) << endl;
-    cout << "O KTH(0) da pilha p3 é = " << p3->kth(0,1) << endl;
-    cout << "O KTH(1) da pilha p3 é = " << p3->kth(1,1) << endl;
-    cout << "O KTH(2) da pilha p3 é = " << p3->kth(2,1) << endl;
-    cout << "O KTH(3) da pilha p3 é = " << p3->kth(3,1) << endl;
-    cout << "O KTH(4) da pilha p3 é = " << p3->kth(4,1) << endl;
-
-    delete p0;
-    delete p1;
-    delete p2;
-    delete p3;
-    delete p6;
-
-    return 0;
+    while(cin >> instruction){
+        switch (instruction)
+        {
+        case 0:
+            instructions();
+            break;
+        case 1:
+            cin >> t;
+            cin >> x;
+            vector.push_back(vector[t]->push(x));
+            break;
+        case 2:
+            cin >> t;
+            vector.push_back(vector[t]->pop());
+            break;
+        case 3:
+            cin >> t;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Stack " << t << endl;
+            }
+            else{
+                cout << vector[t]->size() << endl;
+            }
+            break;
+        case 4:
+            cin >> t;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Stack " << t << endl;
+            }
+            else{
+                cout << vector[t]->top() << endl;
+            }
+            break;
+        case 5:
+            cin >> t;
+            cin >> x;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Stack " << t << endl;
+            }
+            else{
+                cout << vector[t]->kth(x,1) << endl;
+            }
+            break;
+        case 6:
+            cin >> t;
+            cin >> x;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Stack " << t << endl;
+            }
+            else{
+                cout << vector[t]->kth(x,2) << endl;
+            }
+            break;
+        case 7:
+            cin >> t;
+            cin >> x;
+            if(t < 0 || t > vector.size() - 1){
+                cout << "There is no Stack " << t << endl;
+            }
+            else{
+                cout << vector[t]->kth(x,3) << endl;
+            }
+            break;
+        case 8:
+            cin >> t;
+            vector[t]->printAll();
+            break;
+        case 9:
+            for(int i = 0; i < vector.size(); i++){
+                cout << "Stack " << i << " ";
+                vector[i]->printAll();
+            }
+            break;
+        }
+    }
 }

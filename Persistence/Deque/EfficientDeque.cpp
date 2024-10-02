@@ -1,10 +1,22 @@
+/***************************************************************************************
+ * This implementation is based on Chapter 6 of Yan Couto's Master's thesis.
+ * His thesis can be acessed here:
+ * https://www.teses.usp.br/teses/disponiveis/45/45134/tde-24092019-181655/pt-br.php
+ * 
+ * This implementation was presented by Kaplan and Tarjan in the article:
+ * H. Kaplan and R.E. Tarjan, "Purely functional, real-time deques with catenation",
+ * J. ACM, vol. 46, no. 5, pp. 577–603, Sept. 1999.
+ * This article can be acessed here:
+ * https://dl.acm.org/doi/10.1145/324133.324139
+ ***************************************************************************************/
+
 #include <iostream>
 #include <vector>
 #include <cstring>
 
 using namespace std;
 
-struct par{
+struct peer{
     void* first;
     void* second;
 };
@@ -25,7 +37,7 @@ public:
 
     void* pop_front(){
         if(sequence.size() < 1){
-            cout << "Impossível dar pop_front em sub_deque vazia!" << endl;
+            cout << "Empty sub-Deque!" << endl;
             return nullptr;
         }
         void* pointer = sequence[0];
@@ -35,7 +47,7 @@ public:
 
     void* pop_back(){
         if(sequence.size() < 1){
-            cout << "Impossível dar pop_back em sub_deque vazia!" << endl;
+            cout << "Empty sub-Deque!" << endl;
             return nullptr;
         }
         void* finish = sequence[sequence.size() - 1];
@@ -46,7 +58,7 @@ public:
 
     void* front(){
         if(sequence.size() < 1){
-            cout << "Não é possível fazer a operação front em uma subdeque vazia!" << endl;
+            cout << "Empty Deque!" << endl;
             return nullptr;
         }
         return sequence[0];
@@ -54,7 +66,7 @@ public:
 
     void* back(){
         if(sequence.size() < 1){
-            cout << "Não é possível fazer a operação back em uma deque vazia!" << endl;
+            cout << "Empty Deque!" << endl;
             return nullptr;
         }
         return sequence[sequence.size() - 1];
@@ -71,7 +83,6 @@ public:
         }
         return new_sub_deque;
     }
-
 };
 
 class EfficientDeque{
@@ -82,19 +93,15 @@ class EfficientDeque{
     EfficientDeque *next;
     SubDeque *suffix;
 
+    int size;
+
     EfficientDeque(){
+        size = 0;
         prefix = new SubDeque();
         suffix = new SubDeque();
         child = nullptr;
         next = nullptr;
-    }  
-
-    EfficientDeque(SubDeque* p,SubDeque* s){
-        prefix = p;
-        suffix = s;
-        child = nullptr;
-        next = nullptr;
-    }    
+    }     
 
     EfficientDeque* copy(){
       EfficientDeque *new_deque = new EfficientDeque();
@@ -106,6 +113,7 @@ class EfficientDeque{
       }
       new_deque->child = this->child;
       new_deque->next = this->next;
+      new_deque->size = this->size;
       return new_deque;
     }
     
@@ -115,10 +123,10 @@ class EfficientDeque{
             cout << result << " ";
         }
         else{
-            par result_par = *(par*) pointer;
+            peer result_peer = *(peer*) pointer;
             cout << "( ";
-            debug_rec(result_par.first, k-1);
-            debug_rec(result_par.second, k-1);
+            debug_rec(result_peer.first, k-1);
+            debug_rec(result_peer.second, k-1);
             cout << ")";
             cout << " ";
         }
@@ -160,26 +168,34 @@ void* copy_int(const void* src) {
     return new_int;
 }
 
-void* copy_par(const void* src) {
-    void* new_par = malloc(sizeof(par));
-    memcpy(new_par, src, sizeof(par));
-    return new_par;
+void* copy_peer(const void* src) {
+    void* new_peer = malloc(sizeof(peer));
+    memcpy(new_peer, src, sizeof(peer));
+    return new_peer;
 }
 
-void fix_deques(SubDeque* l, SubDeque* r, SubDeque* L, SubDeque* R){
+void fix_deques(EfficientDeque* first, EfficientDeque* second){
+    SubDeque* l = first->prefix;
+    SubDeque* r = first->suffix;
+    SubDeque* L = second->prefix;
+    SubDeque* R = second->suffix;
+
     if(l->size() >= 4){
         void* b = l->pop_back();
         void* a = l->pop_back();
-        //create par
-        par new_par = {a,b};
-        L->push_front(copy_par(&new_par));
+        //create peer
+        peer new_peer = {a,b};
+        L->push_front(copy_peer(&new_peer));
+        second->size++;
     }
+
     if(r->size() >= 4){ 
         void* a = r->pop_front();
         void* b = r->pop_front();
-        //create par
-        par new_par = {a,b};
-        R->push_back(copy_par(&new_par));
+        //create peer
+        peer new_peer = {a,b};
+        R->push_back(copy_peer(&new_peer));
+        second->size++;
     }
 
     if(l->size() <= 1){
@@ -187,39 +203,41 @@ void fix_deques(SubDeque* l, SubDeque* r, SubDeque* L, SubDeque* R){
         void* b;
         if(L->size() != 0){
             void* pointer = L->pop_front();
-            par new_par = *(par*) pointer;
-            a = new_par.first;
-            b = new_par.second;
+            peer new_peer = *(peer*) pointer;
+            a = new_peer.first;
+            b = new_peer.second;
         }
         else{
             void* pointer = R->pop_front();
-            par new_par = *(par*) pointer;
-            a = new_par.first;
-            b = new_par.second;
+            peer new_peer = *(peer*) pointer;
+            a = new_peer.first;
+            b = new_peer.second;
         }
 
         l->push_back(a);
         l->push_back(b);
+        second->size--;
     }
+
     if(r->size() <= 1){
         void* a;
         void* b;
         if(R->size() != 0){
             void* pointer = R->pop_back();
-            par new_par = *(par*) pointer;
-            a = new_par.second;
-            b = new_par.first;
+            peer new_peer = *(peer*) pointer;
+            a = new_peer.second;
+            b = new_peer.first;
         }
         else{
             void* pointer = L->pop_back();
-            par new_par = *(par*) pointer;
-            a = new_par.first;
-            b = new_par.second;
+            peer new_peer = *(peer*) pointer;
+            a = new_peer.first;
+            b = new_peer.second;
         }
         r->push_front(b);
         r->push_front(a);
+        second->size--;
     }
-
 }
 
 int digit(EfficientDeque* a, bool last){
@@ -265,20 +283,22 @@ void fix(EfficientDeque* a){
         void* y;
         if(b->prefix->size() != 0){
             void* pointer = b->prefix->pop_front();
-            par new_par = *(par*) pointer;
+            b->size--;
+            peer new_peer = *(peer*) pointer;
 
-            x = new_par.first;
-            y = new_par.second;
+            x = new_peer.first;
+            y = new_peer.second;
 
             a->prefix->push_back(x);
             a->prefix->push_back(y);
         }
         if(b->prefix->size() != 0){
             void* pointer = b->suffix->pop_front();
-            par new_par = *(par*) pointer;
+            b->size--;
+            peer new_peer = *(peer*) pointer;
 
-            x = new_par.first;
-            y = new_par.second;
+            x = new_peer.first;
+            y = new_peer.second;
 
             a->prefix->push_back(x);
             a->prefix->push_back(y);
@@ -289,7 +309,7 @@ void fix(EfficientDeque* a){
         b = nullptr;
     }
     else{
-        fix_deques(a->prefix, a->suffix, b->prefix, b->suffix);
+        fix_deques(a,b);
         if(b->prefix->size() == 0 && b->suffix->size() == 0 && last){
             b = nullptr;
         }
@@ -339,6 +359,7 @@ EfficientDeque* push_front(EfficientDeque* a, void* x){
         b = new EfficientDeque();
     }
     b->prefix->push_front(x);
+    b->size++;
     check(b);
     return b;
 }
@@ -352,6 +373,7 @@ EfficientDeque* push_back(EfficientDeque* a, void* x){
         b = new EfficientDeque();
     }
     b->suffix->push_back(x);
+    b->size++;
     check(b);
     return b;
 }
@@ -364,6 +386,7 @@ EfficientDeque* pop_front(EfficientDeque* a){
     else{
         b->suffix->pop_front();
     }
+    b->size--;
     check(b);
     return b;
 }
@@ -376,6 +399,7 @@ EfficientDeque* pop_back(EfficientDeque* a){
     else{
         void *c = b->prefix->pop_back();
     }
+    b->size--;
     check(b);
     return b;
 }
@@ -402,24 +426,62 @@ int back(EfficientDeque* a){
     return result;
 }
 
-void print_instructions(){
-    cout << "Codificação das operações:" << endl;
-    cout << " 0         significa print_instructions" << endl;
-    cout << " 1 <t> <x> significa d_ultima+1 = push_front(d_t, x)" << endl;
-    cout << " 2 <t> <x> significa d_ultima+1 = push_back(d_t, x)" << endl;
-    cout << " 3 <t>     significa d_ultima+1 = pop_front(d_t)" << endl;
-    cout << " 4 <t>     significa d_ultima+1 = pop_back(d_t)" << endl;
-    cout << " 5 <t>     significa println(front(d_t))" << endl;
-    cout << " 6 <t>     significa println(back(d_t))" << endl;
-    cout << " 7 <t>     significa print(d_t)" << endl;
-    cout << " 8         significa print_all()" << endl;
-    //cout << " 9 <t> <k> significa println(k_th(d_t, k))" << endl;
-    cout << endl;
+void* k_th(EfficientDeque *current, EfficientDeque *next, int k){
+    int index = k;
+    int max = current->size;
+    if(index <= current->prefix->size()){
+        return current->prefix->sequence[index - 1];
+    }
+    if(index > max - current->suffix->size()){
+        return current->suffix->sequence[index - max + current->suffix->size() - 1];
+    }
+
+    index = index - current->prefix->size();
+    
+    
+    peer aux;
+    EfficientDeque *jump = next;
+
+    if(current->child != nullptr){
+        aux = *(peer*)k_th(current->child, jump, (index+1)/2);
+    }
+    else{
+        aux = *(peer*)k_th(jump, jump->next, (index+1)/2);
+    }
+
+    if(index % 2 != 0){
+        return aux.first;
+    }
+    else{
+        return aux.second;
+    }
 }
 
+int k_th_question(EfficientDeque *d, int k){
+    if(k > d->size){
+        cout << "This deque doesn't have " << k << " elements!" << endl;
+        return -1;
+    }
+    return *(int*)k_th(d, d->next, k);
+}
+
+void instructions(){
+    cout << "0         means instructions()" << endl;
+    cout << "1 <t> <x> means pushFront(t, x)" << endl;
+    cout << "2 <t> <x> means pushBack(t, x)" << endl;
+    cout << "3 <t>     means popFront(t)" << endl;
+    cout << "4 <t>     means popBack(t)" << endl;
+    cout << "5 <t>     means front(t)" << endl;
+    cout << "6 <t>     means back(t)" << endl;
+    cout << "7 <t> <x> means kth(t, x)" << endl;
+    cout << "8 <t>     means print(t)" << endl;
+    cout << "9         means printAll()" << endl;
+    cout << "10        means print_all_with_kth()" << endl;
+    cout << "11        means print_sizes()" << endl;
+}
 
 int main() {
-    print_instructions();
+    instructions();
     vector<EfficientDeque*> vector;
     vector.push_back(nullptr);
 
@@ -428,14 +490,14 @@ int main() {
         switch (n)
         {
         case 0:
-            print_instructions();
+            instructions();
             break;
         case 1:
             int a;
             cin >> t;
             cin >> a;
             if(t > vector.size() - 1){
-                cout << "Não há uma deque " << t << endl;
+                cout << "There is no Deque " << t << endl;
             }
             else{
                 vector.push_back(push_front(vector[t],copy_int(&a)));
@@ -450,7 +512,7 @@ int main() {
         case 3:
             cin >> t;
             if(t > vector.size() - 1){
-                cout << "Não há uma deque " << t << endl;
+                cout << "There is no Deque " << t << endl;
             }
             else{
                 vector.push_back(pop_front(vector[t]));
@@ -459,7 +521,7 @@ int main() {
         case 4:
             cin >> t;
             if(t > vector.size() - 1){
-                cout << "Não há uma deque " << t << endl;
+                cout << "There is no Deque " << t << endl;
             }
             else{
                 vector.push_back(pop_back(vector[t]));
@@ -468,10 +530,10 @@ int main() {
         case 5:
             cin >> t;
             if(t < 0 || t > vector.size() - 1){
-                cout << "Não há uma deque " << t << endl;
+                cout << "There is no Deque " << t << endl;
             }
             else if(vector[t] == nullptr){
-                cout << "Não há elementos nessa deque!" << endl;
+                cout << "Empty Deque!" << endl;
             }
             else{
                 cout << front(vector[t]) << endl;
@@ -480,10 +542,10 @@ int main() {
         case 6:
             cin >> t;
             if(t < 0 || t > vector.size() - 1){
-                cout << "Não há uma deque " << t << endl;
+                cout << "There is no Deque " << t << endl;
             }
             else if(vector[t] == nullptr){
-                cout << "Não há elementos nessa deque!" << endl;
+                cout << "Empty Deque!" << endl;
             }
             else{
                 cout << back(vector[t]) << endl;
@@ -492,29 +554,78 @@ int main() {
         case 7:
             cin >> t;
             if(t < 0 || t > vector.size() - 1){
-                cout << "Não há uma deque " << t << endl;
+                cout << "There is no Deque " << t << endl;
             }
             else if(vector[t] == nullptr){
-                cout << "Não há elementos nessa deque!" << endl;
+                cout << "Empty Deque!" << endl;
             }
             else{
                 vector[t]->print();
             }
             break;           
         case 8:
+            cin >> t;
+            cin >> k;
+            if(vector[t] == nullptr || vector[t]->size < k){
+                cout << "No elements " << k << " in deque " << t << endl;
+            }
+            else{
+                cout << k_th_question(vector[t], k) << endl;
+            }
+            break;
+        case 9:
+            {
             EfficientDeque* aux;
             for(int i = 0; i < vector.size(); i++){
-                cout << "Deque de numero  :  " << i << endl;
+                cout << "Deque  :  " << i << endl;
                 aux = vector[i];
                 if(aux != nullptr){
                     aux->print();
                 }
                 else{
-                    cout << "Deque sem elementos!" << endl;
+                    cout << "Empty Deque!" << endl;
                 }
                 cout << endl;
             }
             break;
+            }
+        case 10:
+            for(int i = 0; i < vector.size(); i++){
+                if(vector[i] == nullptr || vector[i]->size == 0){
+                    cout << "Empty Deque" << endl;
+                }
+                else{
+                    int size = vector[i]->size;
+                    for(int j = 1; j < size + 1; j++){
+                        cout << k_th_question(vector[i],j) << " ";
+                    }
+                    cout << endl;
+                }
+            }
+            break;
+        case 11:
+        {
+            for(int i = 0; i < vector.size(); i++){
+                cout << "Deque  :  " << i << endl;
+                if(vector[i] == nullptr){
+                    cout << "0" << endl;
+                }
+                else{
+                    int j = 0;
+                    EfficientDeque* current = vector[i];
+                    EfficientDeque* next = vector[i]->next;
+                    while(current != nullptr || next != nullptr){
+                        if(current == nullptr){
+                            current = next;
+                            next = current->next;
+                        }
+                        cout << "level " << j << " has size = " << current->size << endl;
+                        current = current->child;
+                        j++;
+                    }
+                }
+            }
+        }
         }
     }
 

@@ -1,6 +1,10 @@
+/***************************************************************************************
+ * This implementation is based on Chapter 4 of Yan Couto's Master's thesis.
+ * His thesis can be acessed here:
+ * https://www.teses.usp.br/teses/disponiveis/45/45134/tde-24092019-181655/pt-br.php
+ ***************************************************************************************/
+
 #include <iostream>
-#include <stdlib.h>
-#include <string>
 #include <vector>
 
 using namespace std;
@@ -9,6 +13,7 @@ class Node {
 public:
     int val;
     int depth;
+
     Node *parent;
     Node *jump;
 
@@ -102,7 +107,6 @@ deque Swap(deque d){
 }
 
 deque PushFront(deque d, int x){
-    //PushFront(d,x): insere x no extremo front de d
     if(d.first == nullptr){
         Node *newNode = new Node(x, nullptr, 1);
         return deque{newNode, newNode};
@@ -112,15 +116,14 @@ deque PushFront(deque d, int x){
     return deque{newNode,d.last};
 
 }
+
 deque PushBack(deque d, int x){
-    //PushBack(d,x): insere x no extremo back de d
     return Swap(PushFront(Swap(d),x));
 }
 
 deque PopFront(deque d){
-    //PopFront(d): remove o elemento no extremo front de d
     if(d.first == nullptr){
-        cout << "Não é possível retirar elementos de um deque vazia!" << endl;
+        cout << "Empty Deque!" << endl;
         return d;
     }
     if(d.first == d.last){
@@ -129,43 +132,36 @@ deque PopFront(deque d){
     return deque{search(d,2), d.last};
 }
 deque PopBack(deque d){
-    //PopBack(d): remove o elemento no extremo back de d
-    deque y = Swap(d);
     return Swap(PopFront(Swap(d)));
 }
 
 int Front(deque d){
-    //Front(d): devolve o elemento no extremo front de d
     if(d.first == nullptr){
-        cout << "Não é possivel devolver um elemento de uma deque vazia!" << endl;
+        cout << "Empty Deque!" << endl;
         return -1;
     }
     return d.first->val;
 
 }
 int Back(deque d){
-    //Back(d): devolve o elemento no extremo back de d
     return Front(Swap(d));
 }
 
 int Kth(deque d, int k){
-    //Kth(d,k): k-ésimo elemento de d, onde o front é o primeiro elemento de d
     if(d.first == nullptr){
-        cout << "Deque inválida!" << endl;
+        cout << "Invalid Deque!" << endl;
         return -1;
     }
     return search(d,k)->val;
 }
 void Print(deque d){
-    //Print(d): imprime todos os elementos da deque d na mesma linha, separados por um branco
-    //(não precisa se preocupar com eventual espaço em branco no fim da linha)
     if(d.first == nullptr){
-        cout << "Não há elementos nessa deque vazia!" << endl;
+        cout << "Empty Deque!" << endl;
         return;
     }
     Node *u = LowestCommonAncestor(d.first, d.last);
     
-    if(u == d.first){ /* caso \ */
+    if(u == d.first){ /* case \ */
         vector<int> vector;
         Node* v = d.last;
         while(v != u->parent){
@@ -178,7 +174,7 @@ void Print(deque d){
         }
         cout << endl;
     }
-    else if(u == d.last){ //caso /
+    else if(u == d.last){ /* case / */
         Node* v = d.first;
         while(v != u->parent){
             cout << v->val << " ";
@@ -186,20 +182,18 @@ void Print(deque d){
         }
         cout << endl;
     }
-    else{ //caso ^
+    else{ //case ^
         vector<int> vector;
         Node* v = d.last;
         while(v != u){
             vector.push_back(v->val);
             v = v->parent;
         }
-
         v = d.first;
         while(v != u->parent){
             cout << v->val << " ";
             v = v->parent;
         }
-
         while(vector.size() != 0){
             cout << vector.back() << " ";
             vector.pop_back();
@@ -208,36 +202,31 @@ void Print(deque d){
     }
 }
 
-void Debuga(Node* ultimo){
-    cout << endl;
-    cout<< "FUNÇÃO DEBUGA!" << endl;
-    if(ultimo == nullptr){
-        return;
-    }
-    cout << "sou o node com valor " << ultimo->val << " , e eu tenho um ponteiro para o Node ";
-    if(ultimo->parent == nullptr){
-        cout << "nullptr" << endl;
-    }
-    else{
-        cout << ultimo->parent->val << endl;
-    }
-    if(ultimo->jump == nullptr){
-        cout << "jump = nullptr!" << endl;
-    }
-    else{
-        cout << "jump = " << ultimo->jump->val << endl;
-    }
-    Debuga(ultimo->parent);
+void instructions(){
+    cout << "0         means instructions()" << endl;
+    cout << "1 <t> <x> means pushFront(t, x)" << endl;
+    cout << "2 <t> <x> means pushBack(t, x)" << endl;
+    cout << "3 <t>     means popFront(t)" << endl;
+    cout << "4 <t>     means popBack(t)" << endl;
+    cout << "5 <t>     means front(t)" << endl;
+    cout << "6 <t>     means back(t)" << endl;
+    cout << "7 <t> <x> means kth(t, x)" << endl;
+    cout << "8 <t>     means print(t)" << endl;
+    cout << "9         means printAll()" << endl;
 }
 
 int main(){
     vector<deque> vector;
-    int numero, t, x;
+    int instruction, t, x;
     vector.push_back(Deque());
+    instructions();
 
-    while(cin >> numero){
-        switch (numero)
+    while(cin >> instruction){
+        switch (instruction)
         {
+        case 0:
+            instructions();
+            break;
         case 1:
             cin >> t;
             cin >> x;
@@ -272,6 +261,14 @@ int main(){
         case 8:
             cin >> t;
             Print(vector[t]);
+            break;
+        case 9:
+            for(int i = 0; i < vector.size(); i++){
+                cout << "Print Deque  " << i << ": " << endl;
+                Print(vector[i]);
+                cout << endl;
+            }
+            cout << "--------------------------" << endl;
             break;
         }
     }
